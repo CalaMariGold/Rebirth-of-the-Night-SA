@@ -10,6 +10,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float _movementSpeed = 5f;
     [SerializeField] private float _sprintMultiplier = 1.5f;
     [SerializeField] private float _crouchMultiplier = 0.5f;
+    [SerializeField] private float _reverseMultiplier = 0.75f;
     [SerializeField] private float _jumpPower = 10f;
     [SerializeField] private float _acceleration = 2.5f;
     [SerializeField] private float _gravity = 0.1635f;
@@ -45,6 +46,15 @@ public class PlayerMovement : MonoBehaviour
     {
         var movement = _playerControls.Default.Move.ReadValue<Vector2>() * _speedMultiplier * _movementSpeed;
         var acceleration = _characterController.isGrounded ? _acceleration : _acceleration * _airControl;
+
+        if(movement.y < 0)
+        {
+            movement = movement * _reverseMultiplier;
+            if (_sprinting)
+            {
+                SprintCanceled();
+            }
+        }
 
         _verticalVelocity = Mathf.MoveTowards(_verticalVelocity, _terminalVelocity, _gravity);
 
