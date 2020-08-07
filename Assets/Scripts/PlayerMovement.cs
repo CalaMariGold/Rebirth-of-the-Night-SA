@@ -7,7 +7,7 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     #region Member Variables
-    [SerializeField] private float _baseSpeed = 5f;
+    [SerializeField] private float _baseSpeed = 6.75f;
     [SerializeField] private float _sprintMultiplier = 1.5f;
     [SerializeField] private float _crouchMultiplier = 0.5f;
     [SerializeField] private float _reverseMultiplier = 0.5f;
@@ -16,10 +16,11 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float _gravity = 9.81f;
     [SerializeField] private float _terminalVelocity = -50f;
     [SerializeField] private float _maxUpwardVelocity = 150f;
-    [SerializeField] private float _airAcceleration = 1f;
+    [SerializeField] private float _airAcceleration = 10f;
 
     [SerializeField, Range(0f, 90f)] private float _slopeLimit = 45f;
-    [SerializeField, Range(0f, 1f)] private float _frictionMultiplier = 0.95f;
+    [SerializeField, Range(0f, 1f)] private float _groundFriction = 0.75f;
+    [SerializeField, Range(0f, 1f)] private float _airFriction = 0.95f;
     [SerializeField] private float _minSpeed = 0.1f;
 
     private float _speedMultiplier = 1f;
@@ -95,15 +96,10 @@ public class PlayerMovement : MonoBehaviour
     private void Locomotion()
     { 
         var movement = _playerControls.Default.Move.ReadValue<Vector2>() * _baseSpeed * _speedMultiplier;
-        var rotation = Quaternion.FromToRotation(transform.up, _groundVector);
-        var hVel = new Vector3(movement.x, 0.0f, movement.y);
-        hVel = rotation * hVel;
-        hVel = transform.rotation * hVel;
-        hVel += transform.up * _rigidbody.velocity.y;
-
-        if(hVel.y > 0.7f)
+        
+        if(movement.magnitude > _minSpeed)
         {
-           Debug.Log(hVel);
+            return;
         }
 
         if (movement.y <= 0)
@@ -114,6 +110,11 @@ public class PlayerMovement : MonoBehaviour
 
         if (_isGrounded)
         {
+            var rotation = Quaternion.FromToRotation(transform.up, _groundVector);
+            var hVel = new Vector3(movement.x, 0.0f, movement.y);
+            hVel = rotation * hVel;
+            hVel = transform.rotation * hVel;
+            hVel += transform.up * _rigidbody.velocity.y;
             _rigidbody.velocity = hVel;
         } else
         {
@@ -135,22 +136,19 @@ public class PlayerMovement : MonoBehaviour
 
     private void Friction()
     {
-        if (_isGrounded)
+        var friction = _isGrounded ? _groundFriction : _airFriction;
+        var hVelocity = _rigidbody.velocity;
+        hVelocity.y = 0f;
+
+        if (hVelocity.magnitude <= _minSpeed)
         {
-            var hVelocity = _rigidbody.velocity;
-            hVelocity.y = 0f;
-
-            if (hVelocity.magnitude <= _minSpeed)
-            {
-                hVelocity = Vector3.zero;
-            }
-            else
-            {
-                hVelocity *= _frictionMultiplier;
-            }
-
-            _rigidbody.velocity = new Vector3(hVelocity.x, _rigidbody.velocity.y, hVelocity.z);
+            hVelocity = Vector3.zero;
+        } else
+        {
+            hVelocity *= friction;
         }
+
+        _rigidbody.velocity = new Vector3(hVelocity.x, _rigidbody.velocity.y, hVelocity.z);
     }
 
     private void Jump()
