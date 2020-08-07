@@ -1,4 +1,5 @@
 
+using System;
 using System.Collections;
 using System.ComponentModel;
 using UnityEngine;
@@ -30,6 +31,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float _groundFriction = 0.75f;
     [Space]
     [SerializeField, Range(0f, 90f)] private float _slopeLimit = 45f;
+    [SerializeField] private float _slopeMagnetDistance = 0.5f;
 
     private float _speedMultiplier = 1f;
 
@@ -38,7 +40,10 @@ public class PlayerMovement : MonoBehaviour
     private bool _canJump = true;
 
     [SerializeField, ReadOnly(true)] private bool _isGrounded = false;
-    [SerializeField, ReadOnly(true)] private Vector3 _groundVector = Vector3.up;
+    [SerializeField, ReadOnly(true)] private bool _wasGrounded = false;
+    [SerializeField, ReadOnly(true)] private Vector3 _groundNormal = Vector3.up;
+    [SerializeField, ReadOnly(true)] private Vector3 _lastNormal = Vector3.up;
+
 
     private PlayerControls _playerControls;
     private Rigidbody _rigidbody;
@@ -48,6 +53,9 @@ public class PlayerMovement : MonoBehaviour
     #region Monobehaviour
     private void Awake()
     {
+        _groundNormal = Vector3.up;
+        _lastNormal = Vector3.up;
+
         _playerControls = new PlayerControls();
         _rigidbody = GetComponent<Rigidbody>();
         _collider = GetComponent<CapsuleCollider>();
@@ -61,11 +69,18 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        Gravity();
         Locomotion();
+        Gravity();
         Friction();
+        if (_wasGrounded && !_isGrounded)
+        {
+            CheckSlopeChange();
+        }
+        _wasGrounded = _isGrounded;
+        _lastNormal = _groundNormal;
+
         _isGrounded = false;
-        _groundVector = transform.up;
+        _groundNormal = transform.up;
     }
 
     private void OnCollisionStay(Collision collision)
@@ -83,7 +98,6 @@ public class PlayerMovement : MonoBehaviour
             var angle = Vector3.Angle(contact.normal, transform.up);
 
             Debug.DrawLine(curve, contact.point, Color.blue, 0.5f);
-            Debug.Log(dir);
 
             if (dir.y > 0f && (Mathf.Abs(angle) <= _slopeLimit))
             {
@@ -91,8 +105,7 @@ public class PlayerMovement : MonoBehaviour
                 groundVector += contact.normal;
             }
         }
- 
-        _groundVector = groundVector == Vector3.zero ? transform.up : groundVector.normalized;
+        _groundNormal = groundVector == Vector3.zero ? transform.up : groundVector.normalized;
     }
 
     private void OnEnable()
@@ -110,11 +123,6 @@ public class PlayerMovement : MonoBehaviour
     private void Locomotion()
     { 
         var movement = _playerControls.Default.Move.ReadValue<Vector2>() * _baseSpeed * _speedMultiplier;
-        
-        if(movement.magnitude < _minSpeed)
-        {
-            return;
-        }
 
         if (movement.y <= 0)
         {
@@ -126,8 +134,23 @@ public class PlayerMovement : MonoBehaviour
         {
             var hVel = new Vector3(movement.x, 0.0f, movement.y);
             hVel = transform.rotation * hVel;
-            hVel += transform.up * _rigidbody.velocity.y;
-            _rigidbody.velocity = hVel;
+
+            var incline = Vector3.Angle(hVel, _groundNormal) - 90.0f;
+
+            if(incline > 0.0f)
+            {
+                var speedScale = 1 - incline / 90.0f;
+                hVel *= speedScale;
+                _rigidbody.velocity = hVel + _rigidbody.velocity.y* transform.up;
+            } else
+            {
+                var rotation = Quaternion.FromToRotation(transform.up, _groundNormal);
+                hVel = rotation * hVel;
+
+                var gravVel = Quaternion.Inverse(rotation) * _rigidbody.velocity;
+
+                _rigidbody.velocity = hVel + _groundNormal * gravVel.y;
+            }
         } else
         {
             var airAcceleration = movement.normalized * _airAcceleration;
@@ -138,7 +161,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void Gravity()
     {
-        _rigidbody.AddForce(_groundVector * -_gravity, ForceMode.Acceleration);
+        _rigidbody.AddForce(_groundNormal * -_gravity, ForceMode.Acceleration);
 
         var velocity = _rigidbody.velocity;
         velocity.y = Mathf.Clamp(_rigidbody.velocity.y, _terminalVelocity, _maxUpwardVelocity);
@@ -163,10 +186,23 @@ public class PlayerMovement : MonoBehaviour
         _rigidbody.velocity = new Vector3(hVelocity.x, _rigidbody.velocity.y, hVelocity.z);
     }
 
+    private void CheckSlopeChange()
+    {
+        var rayHit = Physics.Raycast(transform.position, -transform.up, out var hit, _slopeMagnetDistance);
+
+        if (rayHit && Vector3.Angle(hit.normal, transform.up) < _slopeLimit)
+        {
+            var rotation = Quaternion.FromToRotation(_lastNormal, hit.normal);
+            _rigidbody.velocity = rotation * _rigidbody.velocity;
+        }
+
+    }
+
     private void Jump()
     {
         if (_isGrounded && _canJump)
         {
+            _wasGrounded = false;
             _rigidbody.AddForce(transform.up * _jumpForce, ForceMode.VelocityChange);
             StartCoroutine(JumpCooldown());
         }
