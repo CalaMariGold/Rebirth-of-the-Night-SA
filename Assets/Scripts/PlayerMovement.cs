@@ -1,4 +1,6 @@
 
+using System.Collections;
+using System.ComponentModel;
 using UnityEngine;
 
 [RequireComponent(typeof(CapsuleCollider))]
@@ -7,29 +9,34 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     #region Member Variables
+    [Header("Movement Speed")]
     [SerializeField] private float _baseSpeed = 6.75f;
     [SerializeField] private float _sprintMultiplier = 1.5f;
     [SerializeField] private float _crouchMultiplier = 0.5f;
     [SerializeField] private float _reverseMultiplier = 0.5f;
+    [SerializeField] private float _minSpeed = 0.1f;
 
+    [Header("Jumping")]
     [SerializeField] private float _jumpForce = 4.5f;
+
+    [Header("Physics")]
     [SerializeField] private float _gravity = 9.81f;
     [SerializeField] private float _terminalVelocity = -50f;
     [SerializeField] private float _maxUpwardVelocity = 150f;
+    [Space]
     [SerializeField] private float _airAcceleration = 10f;
-
-    [SerializeField, Range(0f, 90f)] private float _slopeLimit = 45f;
-    [SerializeField, Range(0f, 1f)] private float _groundFriction = 0.75f;
     [SerializeField, Range(0f, 1f)] private float _airFriction = 0.95f;
-    [SerializeField] private float _minSpeed = 0.1f;
+    [SerializeField, Range(0f, 1f)] private float _groundFriction = 0.75f;
+    [Space]
+    [SerializeField, Range(0f, 90f)] private float _slopeLimit = 45f;
 
     private float _speedMultiplier = 1f;
 
     private bool _sprinting = false;
     private bool _crouching = false;
 
-    [SerializeField] private bool _isGrounded = false;
-    [SerializeField] private Vector3 _groundVector = Vector3.up;
+    [SerializeField, ReadOnly(true)] private bool _isGrounded = false;
+    [SerializeField, ReadOnly(true)] private Vector3 _groundVector = Vector3.up;
 
     private PlayerControls _playerControls;
     private Rigidbody _rigidbody;
