@@ -115,9 +115,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (_isGrounded)
         {
-            var rotation = Quaternion.FromToRotation(transform.up, _groundVector);
             var hVel = new Vector3(movement.x, 0.0f, movement.y);
-            hVel = rotation * hVel;
             hVel = transform.rotation * hVel;
             hVel += transform.up * _rigidbody.velocity.y;
             _rigidbody.velocity = hVel;
