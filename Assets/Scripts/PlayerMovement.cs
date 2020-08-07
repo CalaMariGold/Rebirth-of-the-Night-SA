@@ -56,29 +56,34 @@ public class PlayerMovement : MonoBehaviour
         Locomotion();
         Friction();
         _isGrounded = false;
-        _groundVector = _isGrounded ? _groundVector : transform.up;
+        _groundVector = transform.up;
     }
 
     private void OnCollisionStay(Collision collision)
     {
         var contacts = new ContactPoint[collision.contactCount];
+        var groundVector = Vector3.zero;
+
         collision.GetContacts(contacts);
-        _groundVector = transform.up;
 
         foreach (var contact in contacts)
         {
             var bottom = _collider.bounds.center - Vector3.up * _collider.bounds.extents.y;
             var curve = bottom + (Vector3.up * _collider.radius);
+            var dir = curve - contact.point;
             var angle = Vector3.Angle(contact.normal, transform.up);
 
             Debug.DrawLine(curve, contact.point, Color.blue, 0.5f);
+            Debug.Log(dir);
 
-            if ((Mathf.Abs(angle) <= _slopeLimit))
+            if (dir.y > 0f && (Mathf.Abs(angle) <= _slopeLimit))
             {
                 _isGrounded = true;
-                _groundVector = contacts[0].normal;
+                groundVector += contact.normal;
             }
         }
+ 
+        _groundVector = groundVector == Vector3.zero ? transform.up : groundVector.normalized;
     }
 
     private void OnEnable()
@@ -97,7 +102,7 @@ public class PlayerMovement : MonoBehaviour
     { 
         var movement = _playerControls.Default.Move.ReadValue<Vector2>() * _baseSpeed * _speedMultiplier;
         
-        if(movement.magnitude > _minSpeed)
+        if(movement.magnitude < _minSpeed)
         {
             return;
         }
