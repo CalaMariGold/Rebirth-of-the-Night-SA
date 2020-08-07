@@ -18,6 +18,7 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Jumping")]
     [SerializeField] private float _jumpForce = 4.5f;
+    [SerializeField] private float _jumpCooldown = 1f;
 
     [Header("Physics")]
     [SerializeField] private float _gravity = 9.81f;
@@ -34,6 +35,7 @@ public class PlayerMovement : MonoBehaviour
 
     private bool _sprinting = false;
     private bool _crouching = false;
+    private bool _canJump = true;
 
     [SerializeField, ReadOnly(true)] private bool _isGrounded = false;
     [SerializeField, ReadOnly(true)] private Vector3 _groundVector = Vector3.up;
@@ -163,10 +165,18 @@ public class PlayerMovement : MonoBehaviour
 
     private void Jump()
     {
-        if (_isGrounded)
+        if (_isGrounded && _canJump)
         {
             _rigidbody.AddForce(transform.up * _jumpForce, ForceMode.VelocityChange);
+            StartCoroutine(JumpCooldown());
         }
+    }
+
+    private IEnumerator JumpCooldown()
+    {
+        _canJump = false;
+        yield return new WaitForSeconds(_jumpCooldown);
+        _canJump = true;
     }
 
     private void SprintStarted()
