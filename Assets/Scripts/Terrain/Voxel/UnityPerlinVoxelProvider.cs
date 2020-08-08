@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Rebirth.Terrain
+namespace Rebirth.Terrain.Voxel
 {
     /// <summary>
     /// Provides a simple configurable Perlin Noise terrain.

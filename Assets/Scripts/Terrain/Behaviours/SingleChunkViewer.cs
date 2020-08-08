@@ -1,5 +1,6 @@
 using Rebirth.Terrain.Chunk;
 using Rebirth.Terrain.Meshing;
+using Rebirth.Terrain.Voxel;
 using UnityEngine;
 
 namespace Rebirth.Terrain.Behaviours
@@ -9,12 +10,14 @@ namespace Rebirth.Terrain.Behaviours
     /// </summary>
     public class SingleChunkViewer : MonoBehaviour
     {
-        [SerializeField] private Vector3Int _chunkSize;
-        [SerializeField] private Vector3Int _chunkOffset;
+        [SerializeField] private Vector3Int _chunkSize = new Vector3Int(16, 16, 16);
+        [SerializeField] private Vector3Int _chunkOffset = Vector3Int.zero;
         [SerializeField] private float _groundHeight;
-        [SerializeField] private float _noiseAmplitude;
-        [SerializeField] private Vector2 _noiseFrequency;
-        [SerializeField] private Material _material;
+        [SerializeField] private Vector2 _textureScale;
+        [SerializeField] private Vector2 _textureOffset;
+        [SerializeField] private float _amplitude;
+        [SerializeField] private Texture2D _texture;
+        [SerializeField] private Material _material = default;
 
         private IChunk _chunk;
         private GameObject _meshHolder;
@@ -24,7 +27,10 @@ namespace Rebirth.Terrain.Behaviours
         private void Awake()
         {
             // Uses a simple implementation of IVoxelProvider, to be replaced later
-            _voxelProvider = new UnityPerlinVoxelProvider(_groundHeight, _noiseAmplitude, _noiseFrequency);
+            _voxelProvider = new HeightMapVoxelProvider(
+                _texture, _amplitude, _textureScale,
+                _groundHeight, _textureOffset
+            );
             // Create a new chunk and fill with voxels based on _voxelProvider
             _chunk = new ArrayChunk(_chunkSize.x, _chunkSize.y, _chunkSize.z,
                 _chunkOffset.x, _chunkOffset.y, _chunkOffset.z);

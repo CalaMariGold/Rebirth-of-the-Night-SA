@@ -1,4 +1,6 @@
-﻿namespace Rebirth.Terrain
+﻿using Rebirth.Terrain.Voxel;
+
+namespace Rebirth.Terrain
 {
     /// <summary>
     /// Represents a voxel-based terrain.

@@ -1,4 +1,4 @@
-﻿namespace Rebirth.Terrain
+namespace Rebirth.Terrain.Voxel
 {
     /// <summary>
     /// Represents a single voxel.

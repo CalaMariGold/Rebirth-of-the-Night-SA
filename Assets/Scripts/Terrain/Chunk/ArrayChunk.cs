@@ -1,3 +1,5 @@
+using Rebirth.Terrain.Voxel;
+
 namespace Rebirth.Terrain.Chunk
 {
     /// <summary>

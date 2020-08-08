@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Rebirth.Terrain.Chunk;
+using Rebirth.Terrain.Voxel;
 using UnityEngine;
 
 namespace Rebirth.Terrain.Meshing
