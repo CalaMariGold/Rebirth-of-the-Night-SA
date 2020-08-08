@@ -1,3 +1,5 @@
+using Rebirth.Terrain.Chunk;
+using Rebirth.Terrain.Meshing;
 using UnityEngine;
 
 namespace Rebirth.Terrain.Behaviours
@@ -10,31 +12,32 @@ namespace Rebirth.Terrain.Behaviours
         [SerializeField] private Vector3Int _chunkSize;
         [SerializeField] private Vector3Int _chunkOffset;
         [SerializeField] private float _groundHeight;
+        [SerializeField] private float _noiseAmplitude;
+        [SerializeField] private Vector2 _noiseFrequency;
+        [SerializeField] private Material _material;
 
-        private Chunk _chunk;
+        private IChunk _chunk;
         private GameObject _meshHolder;
         private IVoxelProvider _voxelProvider;
-        
-        // TODO: Write an implementation for IMeshGenerator
         private IMeshGenerator _meshGenerator;
 
         private void Awake()
         {
             // Uses a simple implementation of IVoxelProvider, to be replaced later
-            _voxelProvider = new FlatLandVoxelProvider(_groundHeight);
+            _voxelProvider = new UnityPerlinVoxelProvider(_groundHeight, _noiseAmplitude, _noiseFrequency);
             // Create a new chunk and fill with voxels based on _voxelProvider
-            _chunk = new Chunk(_chunkSize.x, _chunkSize.y, _chunkSize.z,
+            _chunk = new ArrayChunk(_chunkSize.x, _chunkSize.y, _chunkSize.z,
                 _chunkOffset.x, _chunkOffset.y, _chunkOffset.z);
             _chunk.Load(_voxelProvider);
             // Create a GameObject to hold and render the mesh
             _meshHolder = new GameObject("Chunk Mesh");
+            _meshHolder.transform.position = transform.position;
             var meshFilter = _meshHolder.AddComponent<MeshFilter>();
-            if (_meshGenerator == null)
-            {
-                return;
-            }
+            _meshGenerator = new MarchingCubes();
             meshFilter.sharedMesh = _meshGenerator.GenerateMesh(_chunk);
-            _meshHolder.AddComponent<MeshRenderer>();
+            meshFilter.sharedMesh.RecalculateNormals();
+            var meshRenderer = _meshHolder.AddComponent<MeshRenderer>();
+            meshRenderer.sharedMaterial = _material;
         }
     }
 }
