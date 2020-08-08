@@ -1,7 +1,7 @@
 namespace Rebirth.Terrain.Chunk
 {
     /// <summary>
-    /// Represents a chunk of voxels in space.
+    /// Represents a chunk of voxels in space using a 3D array.
     /// </summary>
     public class ArrayChunk : IChunk
     {

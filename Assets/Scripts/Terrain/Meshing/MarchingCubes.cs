@@ -5,8 +5,17 @@ using UnityEngine;
 
 namespace Rebirth.Terrain.Meshing
 {
+    /// <summary>
+    /// Provides Unity meshes for voxel chunks using the Marching Cubes algorithm.
+    /// </summary>
     public class MarchingCubes : IMeshGenerator
     {
+        /// <summary>
+        /// Generates a mesh using an implementation of Marching Cubes.
+        /// </summary>
+        /// <param name="chunk">The chunk to generate a mesh from.</param>
+        /// <returns>A Unity mesh which can be added to a scene.</returns>
+        /// <remarks>Based on Sebastian Lague's compute shader implementation.</remarks>
         public Mesh GenerateMesh(IChunk chunk)
         {
             var vertices = new List<Vector3>();
@@ -122,15 +131,15 @@ namespace Rebirth.Terrain.Meshing
         /// <summary>
         /// Interpolates between two voxels to create smooth terrain.
         /// </summary>
-        /// <param name="cornerA"></param>
-        /// <param name="cornerB"></param>
-        /// <param name="coordinateA"></param>
-        /// <param name="coordinateB"></param>
+        /// <param name="voxelA">The first voxel.</param>
+        /// <param name="voxelB">The second voxel.</param>
+        /// <param name="coordinateA">The location of the first voxel.</param>
+        /// <param name="coordinateB">The location of the second voxel.</param>
         /// <returns></returns>
-        private static Vector3 InterpolateVertices(VoxelInfo cornerA, VoxelInfo cornerB,
+        private static Vector3 InterpolateVertices(VoxelInfo voxelA, VoxelInfo voxelB,
             Vector3Int coordinateA, Vector3Int coordinateB)
         {
-            var t = cornerA.Distance / (cornerA.Distance - cornerB.Distance);
+            var t = voxelA.Distance / (voxelA.Distance - voxelB.Distance);
             return coordinateA + t * ((Vector3) coordinateB - coordinateA);
         }
     }
