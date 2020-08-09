@@ -2315,7 +2315,7 @@ Mesh:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: pb_Mesh15814
+  m_Name: pb_Mesh15844
   serializedVersion: 10
   m_SubMeshes:
   - serializedVersion: 2
@@ -7594,7 +7594,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1117572268}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2, y: 17, z: 2}
+  m_LocalPosition: {x: 2, y: 16, z: 2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1505049587}
@@ -7624,12 +7624,15 @@ MonoBehaviour:
   _gravity: 9.81
   _terminalVelocity: -50
   _maxUpwardVelocity: 150
-  _airAcceleration: 2
-  _airFriction: 0.999
+  _airAcceleration: 10
+  _airFriction: 0.95
   _groundFriction: 0.75
   _slopeLimit: 45
+  _slopeMagnetDistance: 0.5
   _isGrounded: 0
-  _groundVector: {x: 0, y: 1, z: 0}
+  _wasGrounded: 0
+  _groundNormal: {x: 0, y: 1, z: 0}
+  _lastNormal: {x: 0, y: 1, z: 0}
 --- !u!54 &1117572272
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -16138,7 +16141,7 @@ Mesh:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: pb_Mesh15758
+  m_Name: pb_Mesh15764
   serializedVersion: 10
   m_SubMeshes:
   - serializedVersion: 2

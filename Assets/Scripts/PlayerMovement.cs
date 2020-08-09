@@ -72,10 +72,8 @@ public class PlayerMovement : MonoBehaviour
         Locomotion();
         Gravity();
         Friction();
-        if (_wasGrounded && !_isGrounded)
-        {
-            CheckSlopeChange();
-        }
+        CheckSlopeChange();
+
         _wasGrounded = _isGrounded;
         _lastNormal = _groundNormal;
 
@@ -86,7 +84,7 @@ public class PlayerMovement : MonoBehaviour
     private void OnCollisionStay(Collision collision)
     {
         var contacts = new ContactPoint[collision.contactCount];
-        var groundVector = Vector3.zero;
+        var groundNormal = Vector3.zero;
 
         collision.GetContacts(contacts);
 
@@ -97,15 +95,15 @@ public class PlayerMovement : MonoBehaviour
             var dir = curve - contact.point;
             var angle = Vector3.Angle(contact.normal, transform.up);
 
-            Debug.DrawLine(curve, contact.point, Color.blue, 0.5f);
-
+            //Checks if contact is valid ground
             if (dir.y > 0f && (Mathf.Abs(angle) <= _slopeLimit))
             {
                 _isGrounded = true;
-                groundVector += contact.normal;
+                groundNormal += contact.normal;
             }
         }
-        _groundNormal = groundVector == Vector3.zero ? transform.up : groundVector.normalized;
+        // Sets normalized average of valid ground normals if grounded
+        _groundNormal = groundNormal == Vector3.zero ? transform.up : groundNormal.normalized;
     }
 
     private void OnEnable()
@@ -124,6 +122,7 @@ public class PlayerMovement : MonoBehaviour
     { 
         var movement = _playerControls.Default.Move.ReadValue<Vector2>() * _baseSpeed * _speedMultiplier;
 
+        // Reduces travel speed and prevents sprinting when traveling backwards
         if (movement.y <= 0)
         {
             movement *= _reverseMultiplier;
@@ -139,17 +138,14 @@ public class PlayerMovement : MonoBehaviour
 
             if(incline > 0.0f)
             {
+                // Reduces velocity when climbing a slope
                 var speedScale = 1 - incline / 90.0f;
                 hVel *= speedScale;
-                _rigidbody.velocity = hVel + _rigidbody.velocity.y* transform.up;
+                _rigidbody.velocity = hVel + _rigidbody.velocity.y * transform.up;
             } else
             {
-                var rotation = Quaternion.FromToRotation(transform.up, _groundNormal);
-                hVel = rotation * hVel;
-
-                var gravVel = Quaternion.Inverse(rotation) * _rigidbody.velocity;
-
-                _rigidbody.velocity = hVel + _groundNormal * gravVel.y;
+                // Rotates velocity to align with slope when descending a slope
+                _rigidbody.velocity = AlignVectorWithGround(hVel) + GetGravityVelocity();
             }
         } else
         {
@@ -163,6 +159,7 @@ public class PlayerMovement : MonoBehaviour
     {
         _rigidbody.AddForce(_groundNormal * -_gravity, ForceMode.Acceleration);
 
+        // Limits vertical speed within defined bounds
         var velocity = _rigidbody.velocity;
         velocity.y = Mathf.Clamp(_rigidbody.velocity.y, _terminalVelocity, _maxUpwardVelocity);
 
@@ -172,30 +169,39 @@ public class PlayerMovement : MonoBehaviour
     private void Friction()
     {
         var friction = _isGrounded ? _groundFriction : _airFriction;
-        var hVelocity = _rigidbody.velocity;
-        hVelocity.y = 0f;
+        var hVel = _rigidbody.velocity;
+        hVel.y = 0.0f;
 
-        if (hVelocity.magnitude <= _minSpeed)
-        {
-            hVelocity = Vector3.zero;
-        } else
-        {
-            hVelocity *= friction;
-        }
+        hVel *= hVel.magnitude <= _minSpeed ? 0.0f : friction;
 
-        _rigidbody.velocity = new Vector3(hVelocity.x, _rigidbody.velocity.y, hVelocity.z);
+        _rigidbody.velocity = hVel + _rigidbody.velocity.y * transform.up;
     }
 
     private void CheckSlopeChange()
     {
-        var rayHit = Physics.Raycast(transform.position, -transform.up, out var hit, _slopeMagnetDistance);
-
-        if (rayHit && Vector3.Angle(hit.normal, transform.up) < _slopeLimit)
+        if (_wasGrounded && !_isGrounded)
         {
-            var rotation = Quaternion.FromToRotation(_lastNormal, hit.normal);
-            _rigidbody.velocity = rotation * _rigidbody.velocity;
+            var rayHit = Physics.Raycast(transform.position, -transform.up, out var hit, _slopeMagnetDistance);
+
+            if (rayHit && Vector3.Angle(hit.normal, transform.up) < _slopeLimit)
+            {
+                var rotation = Quaternion.FromToRotation(_lastNormal, hit.normal);
+                _rigidbody.velocity = rotation * _rigidbody.velocity;
+            }
         }
 
+    }
+
+    private Vector3 GetGravityVelocity()
+    {
+        var gravSpeed = AlignVectorWithGround(_rigidbody.velocity).y;
+        return _groundNormal * gravSpeed;
+    }
+
+    private Vector3 AlignVectorWithGround(Vector3 v)
+    {
+        var rotation = Quaternion.FromToRotation(transform.up, _groundNormal);
+        return rotation * v;
     }
 
     private void Jump()
@@ -203,7 +209,8 @@ public class PlayerMovement : MonoBehaviour
         if (_isGrounded && _canJump)
         {
             _wasGrounded = false;
-            _rigidbody.AddForce(transform.up * _jumpForce, ForceMode.VelocityChange);
+            _isGrounded = false;
+            _rigidbody.AddForce(_groundNormal * _jumpForce, ForceMode.VelocityChange);
             StartCoroutine(JumpCooldown());
         }
     }
