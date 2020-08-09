@@ -3,6 +3,8 @@ namespace Rebirth.Terrain.Voxel
     /// <summary>
     /// Represents a single voxel.
     /// </summary>
+    // Still not sure if it's wise to use a struct and not a class here.
+    // Worth looking into.
     public struct VoxelInfo
     {
         /// <summary>

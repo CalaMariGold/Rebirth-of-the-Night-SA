@@ -29,7 +29,7 @@ namespace Rebirth.Terrain.Chunk
         int Depth { get; }
 
         /// <summary>
-        /// Fills the data array with voxels from a provider.
+        /// Fills the chunk with voxels from a provider.
         /// </summary>
         /// <param name="voxelProvider">The object which provides voxel info.</param>
         void Load(IVoxelProvider voxelProvider);
