@@ -20,6 +20,7 @@ namespace Rebirth.Terrain.Meshing
         public Mesh GenerateMesh(IChunk chunk)
         {
             var vertices = new List<Vector3>();
+            var colours = new List<Color>();
             // Iterate through the cubes
             for (var x = 0; x < chunk.Width - 1; x++)
             {
@@ -27,7 +28,13 @@ namespace Rebirth.Terrain.Meshing
                 {
                     for (var z = 0; z < chunk.Depth - 1; z++)
                     {
-                        vertices.AddRange(GenerateVertices(chunk, x, y, z));
+                        var cubeVertices = GenerateVertices(chunk, x, y, z);
+                        var colour = chunk[x, y, z].VoxelType?.Colour ?? Color.white;
+                        foreach (var vertex in cubeVertices)
+                        {
+                            vertices.Add(vertex);
+                            colours.Add(colour);
+                        }
                     }
                 }
             }
@@ -35,6 +42,7 @@ namespace Rebirth.Terrain.Meshing
             var mesh = new Mesh
             {
                 vertices = vertices.ToArray(),
+                colors = colours.ToArray(),
                 triangles = Enumerable.Range(0, vertices.Count).ToArray()
             };
             // Set vertices & triangles in mesh

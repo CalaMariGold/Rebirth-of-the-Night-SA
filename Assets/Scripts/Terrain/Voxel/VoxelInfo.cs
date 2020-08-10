@@ -15,5 +15,10 @@ namespace Rebirth.Terrain.Voxel
         /// and negative if the voxel is within the terrain.
         /// </remarks>
         public float Distance;
+
+        /// <summary>
+        /// Gets or sets the type of voxel.
+        /// </summary>
+        public IVoxelType VoxelType;
     }
 }
