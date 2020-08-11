@@ -9,9 +9,9 @@ static const int threadGroupSize = 8;
 /// These must match their C# counterparts.
 struct Triangle
 {
-    float3 vertexA;
-    float3 vertexB;
     float3 vertexC;
+    float3 vertexB;
+    float3 vertexA;
 };
 
 struct VoxelInfo
@@ -21,7 +21,7 @@ struct VoxelInfo
 
 /// Buffers.
 AppendStructuredBuffer<Triangle> triangles;
-RWStructuredBuffer<VoxelInfo> chunkPoints;
+RWStructuredBuffer<float> chunkPoints;
 
 /// Parameters to be set with the Compute Shader.
 int chunkWidth;
@@ -35,9 +35,9 @@ static int chunkHeightBits = (int) log2(chunkHeight - 1) + 1;
 ///
 /// Interpolates between two voxels to create smooth terrain.
 ///
-float3 interpolateVerts(VoxelInfo voxelA, VoxelInfo voxelB, int3 coordinateA, int3 coordinateB)
+float3 interpolateVerts(float voxelA, float voxelB, int3 coordinateA, int3 coordinateB)
 {
-    float t = voxelA.distance / (voxelA.distance - voxelB.distance);
+    float t = voxelA / (voxelA - voxelB);
     return coordinateA + t * ((float3) coordinateB - coordinateA);
 }
 
@@ -63,7 +63,7 @@ void March(int3 id : SV_DispatchThreadID)
     }
 
     // 8 corners of the current cube
-    VoxelInfo cubeCorners[8] =
+    float cubeCorners[8] =
     {
         chunkPoints[indexFromCoord(id.x, id.y, id.z)],
         chunkPoints[indexFromCoord(id.x + 1, id.y, id.z)],
@@ -94,7 +94,7 @@ void March(int3 id : SV_DispatchThreadID)
     int cubeIndex = 0;
     for (int i = 0; i < 8; i++)
     {
-        if (cubeCorners[i].distance > 0)
+        if (cubeCorners[i] > 0)
         {
             cubeIndex |= 1 << i;
         }

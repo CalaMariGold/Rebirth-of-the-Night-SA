@@ -29,17 +29,17 @@ namespace Rebirth.Terrain.Chunk
         int Depth { get; }
 
         /// <summary>
-        /// Fills the data array with voxels from a provider.
+        /// Fills the chunk with voxels from a provider.
         /// </summary>
         /// <param name="voxelProvider">The object which provides voxel info.</param>
         void Load(IVoxelProvider voxelProvider);
 
         /// <summary>
-        /// Returns a 1-D array containing the data in the chunk's 3-D data array.
+        /// Returns a 1-D array containing the voxel Distance data in the chunk's 3-D data array.
         /// Indexing is determined with the following mapping:
         ///     index(x, y, z) = z << (chunkWidthBits + chunkHeightBits) | y << chunkWidthBits | x,
         /// where (x, y, z) are local data array indices.
         /// </summary>
-        VoxelInfo[] ToArray();
+        float[] CalcDistanceArray();
     }
 }

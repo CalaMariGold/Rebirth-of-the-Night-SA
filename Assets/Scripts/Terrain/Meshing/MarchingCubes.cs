@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using Rebirth.Terrain.Chunk;
 using UnityEngine;
 
@@ -40,7 +42,7 @@ namespace Rebirth.Terrain.Meshing
             // Fill buffers
             computeShader.SetBuffer(0, "chunkPoints", _pointBuffer);
             computeShader.SetBuffer(0, "triangles", _triangleBuffer);
-            _pointBuffer.SetData(chunk.ToArray());
+            _pointBuffer.SetData(chunk.CalcDistanceArray());
 
             // Update shader params
             computeShader.SetInt("chunkWidth", chunk.Width);
@@ -66,21 +68,33 @@ namespace Rebirth.Terrain.Meshing
             _triangleBuffer.GetData(tris, 0, 0, numTris);
 
             var vertices = new Vector3[numTris * 3];
-            var triangles = new int[numTris * 3];
 
             for (int i = 0; i < numTris; i++)
             {
                 for (int j = 0; j < 3; j++)
                 {
-                    triangles[i * 3 + j] = i * 3 + j;
                     vertices[i * 3 + j] = tris[i][j];
+                }
+            }
+
+            // TODO: properly add colors, probably in compute shader
+            var colours = new List<Color>();
+            for (var x = 0; x < chunk.Width - 1; x++)
+            {
+                for (var y = 0; y < chunk.Height - 1; y++)
+                {
+                    for (var z = 0; z < chunk.Depth - 1; z++)
+                    {
+                        var colour = chunk[x, y, z].VoxelType?.Colour ?? Color.white;
+                    }
                 }
             }
 
             return new Mesh
             {
                 vertices = vertices,
-                triangles = triangles
+                // colors = colours.ToArray(),
+                triangles = Enumerable.Range(0, vertices.Length).ToArray()
             };
         }
 
@@ -90,11 +104,21 @@ namespace Rebirth.Terrain.Meshing
         /// <param name="chunk">The chunk to generate a mesh from.</param>
         private void CreateBuffers(IChunk chunk)
         {
-            int maxTriangleCount = ((chunk.Width - 1) * (chunk.Height - 1) * (chunk.Depth - 1)) * 5;
-            int numPoints = chunk.Width * chunk.Height * chunk.Depth;
-            _pointBuffer = new ComputeBuffer(numPoints, sizeof(float));
+            int numVoxels = chunk.Width * chunk.Height * chunk.Depth;
+            int maxTriangleCount = numVoxels * 5;
+            
+            ReleaseBuffers(); // Ensure previous buffers are released
+            _pointBuffer = new ComputeBuffer(numVoxels, sizeof(float));
             _triangleBuffer = new ComputeBuffer(maxTriangleCount, sizeof(float) * 3 * 3, ComputeBufferType.Append);
             _triCountBuffer = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
+        }
+
+        void OnDestroy()
+        {
+            if (Application.isPlaying)
+            {
+                ReleaseBuffers();
+            }
         }
 
         /// <summary>
@@ -102,7 +126,7 @@ namespace Rebirth.Terrain.Meshing
         /// </summary>
         private void ReleaseBuffers()
         {
-            if (_triangleBuffer != null)
+            if (_pointBuffer != default(ComputeBuffer))
             {
                 _pointBuffer.Release();
                 _triangleBuffer.Release();

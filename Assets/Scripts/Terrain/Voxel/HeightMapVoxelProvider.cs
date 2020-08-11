@@ -1,39 +1,42 @@
+using System;
 using UnityEngine;
 
 namespace Rebirth.Terrain.Voxel
 {
     public class HeightMapVoxelProvider : IVoxelProvider
     {
-        private readonly Texture2D _heightMap;
-        private readonly Vector2 _scale;
-        private readonly Vector2 _offset;
-        private readonly float _amplitude;
-        private readonly float _baseHeight;
-
-        public HeightMapVoxelProvider(Texture2D heightMap, float amplitude,
-            float baseHeight = 0, Vector2 offset = default)
-            : this(heightMap, amplitude, Vector2.one, baseHeight, offset) { }
-
-        public HeightMapVoxelProvider(Texture2D heightMap, float amplitude,
-            Vector2 scale, float baseHeight = 0, Vector2 offset = default)
-        {
-            _heightMap = heightMap;
-            _scale = scale;
-            _offset = offset;
-            _amplitude = amplitude;
-            _baseHeight = baseHeight;
-        }
+        public Texture2D HeightMap { get; set; }
+        public Vector2 Scale { get; set; } = Vector2.one;
+        public Vector2 Offset { get; set; } = Vector2.zero;
+        public float Amplitude { get; set; } = 1.0f;
+        public float BaseHeight { get; set; }
+        public float RockHeight { get; set; }
+        public float SnowHeight { get; set; }
+        public IVoxelType Snow { get; set; }
+        public IVoxelType Rock { get; set; }
+        public IVoxelType Grass { get; set; }
         
         public VoxelInfo GetVoxelInfo(int x, int y, int z)
         {
-            var rawHeight = _heightMap.GetPixelBilinear(
-                x / _scale.x + _offset.x,
-                z / _scale.y + _offset.y
+            var rawHeight = HeightMap.GetPixelBilinear(
+                x / Scale.x + Offset.x,
+                z / Scale.y + Offset.y
             ).grayscale;
             return new VoxelInfo
             {
-                Distance = y - _baseHeight - rawHeight * _amplitude
+                Distance = y - BaseHeight - rawHeight * Amplitude,
+                VoxelType = GetVoxelType(y)
             };
+        }
+
+        private IVoxelType GetVoxelType(int height)
+        {
+            if (height > SnowHeight)
+            {
+                return Snow;
+            }
+
+            return height > RockHeight ? Rock : Grass;
         }
     }
 }
