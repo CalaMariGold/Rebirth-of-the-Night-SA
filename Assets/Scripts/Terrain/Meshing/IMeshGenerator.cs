@@ -12,7 +12,8 @@ namespace Rebirth.Terrain.Meshing
         /// Generates a mesh from the data in an <seealso cref="IChunk"/>.
         /// </summary>
         /// <param name="chunk">The chunk to generate a mesh from.</param>
+        /// <param name="computeShader">The compute shader to use when generating the mesh.</param>
         /// <returns>A Unity mesh which can be added to a scene.</returns>
-        Mesh GenerateMesh(IChunk chunk);
+        Mesh GenerateMesh(IChunk chunk, ComputeShader computeShader);
     }
 }

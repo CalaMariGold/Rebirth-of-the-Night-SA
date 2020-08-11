@@ -1,4 +1,5 @@
 using Rebirth.Terrain.Voxel;
+using UnityEngine;
 
 namespace Rebirth.Terrain.Chunk
 {
@@ -41,14 +42,17 @@ namespace Rebirth.Terrain.Chunk
         /// within the chunk.
         /// </summary>
         public VoxelInfo this[int x, int y, int z] => _voxelData[x, y, z];
+
         /// <summary>
         /// Gets the width of the chunk in the x-axis.
         /// </summary>
         public int Width { get; }
+
         /// <summary>
         /// Gets the height of the chunk in the y-axis.
         /// </summary>
         public int Height { get; }
+
         /// <summary>
         /// Gets the depth of the chunk in the z-axis.
         /// </summary>
@@ -74,6 +78,32 @@ namespace Rebirth.Terrain.Chunk
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns a 1-D array containing the data in the chunk's 3-D data array.
+        /// Indexing is determined with the following mapping:
+        ///     index(x, y, z) = z << (chunkWidthBits + chunkHeightBits) | y << chunkWidthBits | x,
+        /// where (x, y, z) are local data array indices.
+        /// </summary>
+        public VoxelInfo[] ToArray()
+        {
+            int chunkWidthBits  = (int) Mathf.Log(Width - 1, 2) + 1;
+            int chunkHeightBits  = (int) Mathf.Log(Height - 1, 2) + 1;
+            VoxelInfo[] chunkData = new VoxelInfo[Width * Height * Depth];
+
+            for (var x = 0; x < Width; x++)
+            {
+                for (var y = 0; y < Height; y++)
+                {
+                    for (var z = 0; z < Depth; z++)
+                    {
+                        int index = z << (chunkWidthBits + chunkHeightBits) | y << chunkWidthBits | x;
+                        chunkData[index] = _voxelData[x, y, z];
+                    }
+                }
+            }
+            return chunkData;
         }
     }
 }

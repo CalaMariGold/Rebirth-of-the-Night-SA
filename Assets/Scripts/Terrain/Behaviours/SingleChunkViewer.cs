@@ -18,6 +18,7 @@ namespace Rebirth.Terrain.Behaviours
         [SerializeField] private float _amplitude;
         [SerializeField] private Texture2D _texture;
         [SerializeField] private Material _material = default;
+        [SerializeField] private ComputeShader _computeShader;
 
         private IChunk _chunk;
         private GameObject _meshHolder;
@@ -40,7 +41,7 @@ namespace Rebirth.Terrain.Behaviours
             _meshHolder.transform.position = transform.position;
             var meshFilter = _meshHolder.AddComponent<MeshFilter>();
             _meshGenerator = new MarchingCubes();
-            meshFilter.sharedMesh = _meshGenerator.GenerateMesh(_chunk);
+            meshFilter.sharedMesh = _meshGenerator.GenerateMesh(_chunk, _computeShader);
             meshFilter.sharedMesh.RecalculateNormals();
             var meshRenderer = _meshHolder.AddComponent<MeshRenderer>();
             meshRenderer.sharedMaterial = _material;

@@ -1,7 +1,4 @@
-using System.Collections.Generic;
-using System.Linq;
 using Rebirth.Terrain.Chunk;
-using Rebirth.Terrain.Voxel;
 using UnityEngine;
 
 namespace Rebirth.Terrain.Meshing
@@ -11,137 +8,106 @@ namespace Rebirth.Terrain.Meshing
     /// </summary>
     public class MarchingCubes : IMeshGenerator
     {
+        private const int _threadGroupSize = 8;
+        private ComputeBuffer _pointBuffer;
+        private ComputeBuffer _triangleBuffer;
+        private ComputeBuffer _triCountBuffer;
+
         /// <summary>
-        /// Generates a mesh using an implementation of Marching Cubes.
+        /// Generates a mesh using an implementation of Marching Cubes with a compute shader.
         /// </summary>
         /// <param name="chunk">The chunk to generate a mesh from.</param>
-        /// <returns>A Unity mesh which can be added to a scene.</returns>
+        /// <param name="computeShader">The compute shader to use when generating the mesh.</param>
+        /// <returns>A Mesh which can be added to a scene.</returns>
         /// <remarks>Based on Sebastian Lague's compute shader implementation.</remarks>
-        public Mesh GenerateMesh(IChunk chunk)
+        public Mesh GenerateMesh(IChunk chunk, ComputeShader computeShader)
         {
-            var vertices = new List<Vector3>();
-            // Iterate through the cubes
-            for (var x = 0; x < chunk.Width - 1; x++)
-            {
-                for (var y = 0; y < chunk.Height - 1; y++)
-                {
-                    for (var z = 0; z < chunk.Depth - 1; z++)
-                    {
-                        vertices.AddRange(GenerateVertices(chunk, x, y, z));
-                    }
-                }
-            }
-
-            var mesh = new Mesh
-            {
-                vertices = vertices.ToArray(),
-                triangles = Enumerable.Range(0, vertices.Count).ToArray()
-            };
-            // Set vertices & triangles in mesh
+            CreateBuffers(chunk);
+            Mesh mesh = CreateChunkMesh(chunk, computeShader);
+            ReleaseBuffers();
             return mesh;
         }
 
         /// <summary>
-        /// Generates a list of vertices to generate mesh triangles for a given cube.
+        /// Helper method for generating a Mesh via Marching Cubes algorithm.
+        /// Fills buffers, executes compute shader, and returns result.
         /// </summary>
-        /// <param name="chunk">The chunk to get voxel data from/</param>
-        /// <param name="x">The cube's x-index.</param>
-        /// <param name="y">The cube's y-index.</param>
-        /// <param name="z">The cube's z-index.</param>
-        /// <returns>An enumerable representing the vertices to be triangulated.</returns>
-        private static IEnumerable<Vector3> GenerateVertices(IChunk chunk, int x, int y, int z)
+        /// <param name="chunk">The chunk to generate a mesh from.</param>
+        /// <param name="computeShader">The compute shader to use when generating the mesh.</param>
+        /// <returns>A Mesh which can be added to a scene.</returns>
+        private Mesh CreateChunkMesh(IChunk chunk, ComputeShader computeShader)
         {
-            // 8 corners of the current cube
-            VoxelInfo[] cubeCorners =
-            {
-                chunk[x, y, z],
-                chunk[x + 1, y, z],
-                chunk[x + 1, y, z + 1],
-                chunk[x, y, z + 1],
-                chunk[x, y + 1, z],
-                chunk[x + 1, y + 1, z],
-                chunk[x + 1, y + 1, z + 1],
-                chunk[x, y + 1, z + 1]
-            };
-            // This is kind of messy, but probably more efficient than a loop
-            Vector3Int[] cornerLocations =
-            {
-                new Vector3Int(x, y, z),
-                new Vector3Int(x + 1, y, z),
-                new Vector3Int(x + 1, y, z + 1),
-                new Vector3Int(x, y, z + 1),
-                new Vector3Int(x, y + 1, z),
-                new Vector3Int(x + 1, y + 1, z),
-                new Vector3Int(x + 1, y + 1, z + 1),
-                new Vector3Int(x, y + 1, z + 1)
-            };
+            // Fill buffers
+            computeShader.SetBuffer(0, "chunkPoints", _pointBuffer);
+            computeShader.SetBuffer(0, "triangles", _triangleBuffer);
+            _pointBuffer.SetData(chunk.ToArray());
 
-            // Generate a unique index for the cube configuration.
-            // 0 means entirely within the surface, 255 entirely outside.
-            // This is used to lookup the edge table.
-            var cubeIndex = 0;
-            for (var i = 0; i < 8; i++)
+            // Update shader params
+            computeShader.SetInt("chunkWidth", chunk.Width);
+            computeShader.SetInt("chunkHeight", chunk.Height);
+            computeShader.SetInt("chunkDepth", chunk.Depth);
+
+            // Determine number of thread groups to use for each axis
+            int numThreadGroupsX = Mathf.CeilToInt (chunk.Width / (float) _threadGroupSize);
+            int numThreadGroupsY = Mathf.CeilToInt (chunk.Height / (float) _threadGroupSize);
+            int numThreadGroupsZ = Mathf.CeilToInt (chunk.Depth / (float) _threadGroupSize);
+
+            // Dispatch
+            computeShader.Dispatch(0, numThreadGroupsX, numThreadGroupsY, numThreadGroupsZ);
+
+            // Get number of triangles in the triangle buffer
+            ComputeBuffer.CopyCount(_triangleBuffer, _triCountBuffer, 0);
+            int[] triCountArray = { 0 };
+            _triCountBuffer.GetData(triCountArray);
+            int numTris = triCountArray[0];
+
+            // Get triangle data from shader
+            Triangle[] tris = new Triangle[numTris];
+            _triangleBuffer.GetData(tris, 0, 0, numTris);
+
+            var vertices = new Vector3[numTris * 3];
+            var triangles = new int[numTris * 3];
+
+            for (int i = 0; i < numTris; i++)
             {
-                if (cubeCorners[i].Distance > 0)
+                for (int j = 0; j < 3; j++)
                 {
-                    cubeIndex |= 1 << i;
+                    triangles[i * 3 + j] = i * 3 + j;
+                    vertices[i * 3 + j] = tris[i][j];
                 }
             }
 
-            // Create triangles for the current config
-            for (var t = 0; MarchingTables.Triangulation[cubeIndex, t] != -1; t += 3)
+            return new Mesh
             {
-                // Get indices of corners A and B for each edge that needs to be joined
-                var a0 = MarchingTables.CornerIndexAFromEdge[
-                    MarchingTables.Triangulation[cubeIndex, t]
-                ];
-                var b0 = MarchingTables.CornerIndexBFromEdge[
-                    MarchingTables.Triangulation[cubeIndex, t]
-                ];
-                
-                var a1 = MarchingTables.CornerIndexAFromEdge[
-                    MarchingTables.Triangulation[cubeIndex, t + 1]
-                ];
-                var b1 = MarchingTables.CornerIndexBFromEdge[
-                    MarchingTables.Triangulation[cubeIndex, t + 1]
-                ];
-                
-                var a2 = MarchingTables.CornerIndexAFromEdge[
-                    MarchingTables.Triangulation[cubeIndex, t + 2]
-                ];
-                var b2 = MarchingTables.CornerIndexBFromEdge[
-                    MarchingTables.Triangulation[cubeIndex, t + 2]
-                ];
-
-                // Interpolate for smooth terrain
-                yield return InterpolateVertices(
-                    cubeCorners[a0], cubeCorners[b0],
-                    cornerLocations[a0], cornerLocations[b0]
-                    );
-                yield return InterpolateVertices(
-                    cubeCorners[a2], cubeCorners[b2],
-                    cornerLocations[a2], cornerLocations[b2]
-                );
-                yield return InterpolateVertices(
-                    cubeCorners[a1], cubeCorners[b1],
-                    cornerLocations[a1], cornerLocations[b1]
-                );
-            }
+                vertices = vertices,
+                triangles = triangles
+            };
         }
 
         /// <summary>
-        /// Interpolates between two voxels to create smooth terrain.
+        /// Creates compute buffers necessary for Marching Cubes algorithm.
         /// </summary>
-        /// <param name="voxelA">The first voxel.</param>
-        /// <param name="voxelB">The second voxel.</param>
-        /// <param name="coordinateA">The location of the first voxel.</param>
-        /// <param name="coordinateB">The location of the second voxel.</param>
-        /// <returns></returns>
-        private static Vector3 InterpolateVertices(VoxelInfo voxelA, VoxelInfo voxelB,
-            Vector3Int coordinateA, Vector3Int coordinateB)
+        /// <param name="chunk">The chunk to generate a mesh from.</param>
+        private void CreateBuffers(IChunk chunk)
         {
-            var t = voxelA.Distance / (voxelA.Distance - voxelB.Distance);
-            return coordinateA + t * ((Vector3) coordinateB - coordinateA);
+            int maxTriangleCount = ((chunk.Width - 1) * (chunk.Height - 1) * (chunk.Depth - 1)) * 5;
+            int numPoints = chunk.Width * chunk.Height * chunk.Depth;
+            _pointBuffer = new ComputeBuffer(numPoints, sizeof(float));
+            _triangleBuffer = new ComputeBuffer(maxTriangleCount, sizeof(float) * 3 * 3, ComputeBufferType.Append);
+            _triCountBuffer = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
+        }
+
+        /// <summary>
+        /// Releases all compute buffers.
+        /// </summary>
+        private void ReleaseBuffers()
+        {
+            if (_triangleBuffer != null)
+            {
+                _pointBuffer.Release();
+                _triangleBuffer.Release();
+                _triCountBuffer.Release();
+            }
         }
     }
 }

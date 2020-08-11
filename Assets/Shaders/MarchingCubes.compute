@@ -1,0 +1,133 @@
+﻿#pragma kernel March
+#include "./MarchTables.compute"
+
+/// Number of threads per group.
+/// Make sure this matches the value in the MarchingCubes class.
+static const int threadGroupSize = 8;
+
+/// Structures.
+/// These must match their C# counterparts.
+struct Triangle
+{
+    float3 vertexA;
+    float3 vertexB;
+    float3 vertexC;
+};
+
+struct VoxelInfo
+{
+    float distance;
+};
+
+/// Buffers.
+AppendStructuredBuffer<Triangle> triangles;
+RWStructuredBuffer<VoxelInfo> chunkPoints;
+
+/// Parameters to be set with the Compute Shader.
+int chunkWidth;
+int chunkHeight;
+int chunkDepth;
+
+/// Bits in two of the dimensions, used for indexing.
+static int chunkWidthBits  = (int) log2(chunkWidth - 1) + 1;
+static int chunkHeightBits = (int) log2(chunkHeight - 1) + 1;
+
+///
+/// Interpolates between two voxels to create smooth terrain.
+///
+float3 interpolateVerts(VoxelInfo voxelA, VoxelInfo voxelB, int3 coordinateA, int3 coordinateB)
+{
+    float t = voxelA.distance / (voxelA.distance - voxelB.distance);
+    return coordinateA + t * ((float3) coordinateB - coordinateA);
+}
+
+///
+/// Returns a 1-D array containing the data in the chunk's 3-D data array.
+///
+int indexFromCoord(int x, int y, int z)
+{
+    return z << (chunkWidthBits + chunkHeightBits) | y << chunkWidthBits | x;
+}
+
+///
+/// Applies the Marching Cubes algorithm to create triangles for a mesh
+/// for a single chunk.
+///
+[numthreads(threadGroupSize, threadGroupSize, threadGroupSize)]
+void March(int3 id : SV_DispatchThreadID)
+{   
+    // Stop one point before the end because voxel includes neighbouring points
+    if (id.x >= chunkWidth - 1 || id.y >= chunkHeight - 1 || id.z >= chunkDepth - 1)
+    {
+        return;
+    }
+
+    // 8 corners of the current cube
+    VoxelInfo cubeCorners[8] =
+    {
+        chunkPoints[indexFromCoord(id.x, id.y, id.z)],
+        chunkPoints[indexFromCoord(id.x + 1, id.y, id.z)],
+        chunkPoints[indexFromCoord(id.x + 1, id.y, id.z + 1)],
+        chunkPoints[indexFromCoord(id.x, id.y, id.z + 1)],
+        chunkPoints[indexFromCoord(id.x, id.y + 1, id.z)],
+        chunkPoints[indexFromCoord(id.x + 1, id.y + 1, id.z)],
+        chunkPoints[indexFromCoord(id.x + 1, id.y + 1, id.z + 1)],
+        chunkPoints[indexFromCoord(id.x, id.y + 1, id.z + 1)]
+    };
+
+    // This is kind of messy, but probably more efficient than a loop
+    int3 cornerLocations[8] =
+    {
+        int3 (id.x, id.y, id.z),
+        int3 (id.x + 1, id.y, id.z),
+        int3 (id.x + 1, id.y, id.z + 1),
+        int3 (id.x, id.y, id.z + 1),
+        int3 (id.x, id.y + 1, id.z),
+        int3 (id.x + 1, id.y + 1, id.z),
+        int3 (id.x + 1, id.y + 1, id.z + 1),
+        int3 (id.x, id.y + 1, id.z + 1),
+    };
+
+    // Generate a unique index for the cube configuration.
+    // 0 means entirely within the surface, 255 entirely outside.
+    // This is used to lookup the edge table.
+    int cubeIndex = 0;
+    for (int i = 0; i < 8; i++)
+    {
+        if (cubeCorners[i].distance > 0)
+        {
+            cubeIndex |= 1 << i;
+        }
+    }
+
+    // Create triangles for current cube configuration
+    for (int t = 0; triangulation[cubeIndex][t] != -1; t +=3)
+    {
+        // Get indices of corner points A and B for each of the three edges
+        // of the cube that need to be joined to form the triangle.
+        int a0 = cornerIndexAFromEdge[triangulation[cubeIndex][t]];
+        int b0 = cornerIndexBFromEdge[triangulation[cubeIndex][t]];
+
+        int a1 = cornerIndexAFromEdge[triangulation[cubeIndex][t+1]];
+        int b1 = cornerIndexBFromEdge[triangulation[cubeIndex][t+1]];
+
+        int a2 = cornerIndexAFromEdge[triangulation[cubeIndex][t+2]];
+        int b2 = cornerIndexBFromEdge[triangulation[cubeIndex][t+2]];
+
+        Triangle tri;
+        tri.vertexA = interpolateVerts(
+            cubeCorners[a0], cubeCorners[b0],
+            cornerLocations[a0], cornerLocations[b0]
+            );
+        tri.vertexB = interpolateVerts(
+            cubeCorners[a1], cubeCorners[b1],
+            cornerLocations[a1], cornerLocations[b1]
+            );
+        tri.vertexC = interpolateVerts(
+            cubeCorners[a2], cubeCorners[b2],
+            cornerLocations[a2], cornerLocations[b2]
+            );
+        
+        triangles.Append(tri);
+    }
+}
