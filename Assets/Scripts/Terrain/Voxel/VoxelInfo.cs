@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace Rebirth.Terrain.Voxel
 {
     /// <summary>
@@ -20,5 +22,18 @@ namespace Rebirth.Terrain.Voxel
         /// Gets or sets the type of voxel.
         /// </summary>
         public IVoxelType VoxelType;
+        
+        /// <summary>
+        /// Convert the voxel info to data which can be passed to a compute shader.
+        /// </summary>
+        /// <returns>A struct holding raw voxel data for compute.</returns>
+        public VoxelComputeInfo ToCompute()
+        {
+            return new VoxelComputeInfo
+            {
+                Distance = Distance,
+                Colour = VoxelType?.Colour ?? Color.white
+            };
+        }
     }
 }

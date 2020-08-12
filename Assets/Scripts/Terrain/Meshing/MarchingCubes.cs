@@ -1,6 +1,7 @@
-using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Rebirth.Terrain.Chunk;
+using Rebirth.Terrain.Voxel;
 using UnityEngine;
 
 namespace Rebirth.Terrain.Meshing
@@ -25,7 +26,7 @@ namespace Rebirth.Terrain.Meshing
         public Mesh GenerateMesh(IChunk chunk, ComputeShader computeShader)
         {
             CreateBuffers(chunk);
-            Mesh mesh = CreateChunkMesh(chunk, computeShader);
+            var mesh = CreateChunkMesh(chunk, computeShader);
             ReleaseBuffers();
             return mesh;
         }
@@ -50,9 +51,9 @@ namespace Rebirth.Terrain.Meshing
             computeShader.SetInt("chunkDepth", chunk.Depth);
 
             // Determine number of thread groups to use for each axis
-            int numThreadGroupsX = Mathf.CeilToInt (chunk.Width / (float) _threadGroupSize);
-            int numThreadGroupsY = Mathf.CeilToInt (chunk.Height / (float) _threadGroupSize);
-            int numThreadGroupsZ = Mathf.CeilToInt (chunk.Depth / (float) _threadGroupSize);
+            var numThreadGroupsX = Mathf.CeilToInt (chunk.Width / (float) _threadGroupSize);
+            var numThreadGroupsY = Mathf.CeilToInt (chunk.Height / (float) _threadGroupSize);
+            var numThreadGroupsZ = Mathf.CeilToInt (chunk.Depth / (float) _threadGroupSize);
 
             // Dispatch
             computeShader.Dispatch(0, numThreadGroupsX, numThreadGroupsY, numThreadGroupsZ);
@@ -61,39 +62,28 @@ namespace Rebirth.Terrain.Meshing
             ComputeBuffer.CopyCount(_triangleBuffer, _triCountBuffer, 0);
             int[] triCountArray = { 0 };
             _triCountBuffer.GetData(triCountArray);
-            int numTris = triCountArray[0];
+            var numTris = triCountArray[0];
 
             // Get triangle data from shader
-            Triangle[] tris = new Triangle[numTris];
+            var tris = new Triangle[numTris];
             _triangleBuffer.GetData(tris, 0, 0, numTris);
 
             var vertices = new Vector3[numTris * 3];
+            var colours = new Color[numTris * 3];
 
-            for (int i = 0; i < numTris; i++)
+            for (var i = 0; i < numTris; i++)
             {
-                for (int j = 0; j < 3; j++)
+                for (var j = 0; j < 3; j++)
                 {
                     vertices[i * 3 + j] = tris[i][j];
-                }
-            }
-
-            // TODO: properly add colors, probably in compute shader
-            var colours = new List<Color>();
-            for (var x = 0; x < chunk.Width - 1; x++)
-            {
-                for (var y = 0; y < chunk.Height - 1; y++)
-                {
-                    for (var z = 0; z < chunk.Depth - 1; z++)
-                    {
-                        var colour = chunk[x, y, z].VoxelType?.Colour ?? Color.white;
-                    }
+                    colours[i * 3 + j] = tris[i].Color;
                 }
             }
 
             return new Mesh
             {
                 vertices = vertices,
-                // colors = colours.ToArray(),
+                colors = colours,
                 triangles = Enumerable.Range(0, vertices.Length).ToArray()
             };
         }
@@ -104,16 +94,18 @@ namespace Rebirth.Terrain.Meshing
         /// <param name="chunk">The chunk to generate a mesh from.</param>
         private void CreateBuffers(IChunk chunk)
         {
-            int numVoxels = chunk.Width * chunk.Height * chunk.Depth;
-            int maxTriangleCount = numVoxels * 5;
+            var numVoxels = chunk.Width * chunk.Height * chunk.Depth;
+            var maxTriangleCount = numVoxels * 5;
             
             ReleaseBuffers(); // Ensure previous buffers are released
-            _pointBuffer = new ComputeBuffer(numVoxels, sizeof(float));
-            _triangleBuffer = new ComputeBuffer(maxTriangleCount, sizeof(float) * 3 * 3, ComputeBufferType.Append);
+
+            _pointBuffer = new ComputeBuffer(numVoxels, Marshal.SizeOf<VoxelComputeInfo>());
+            _triangleBuffer = new ComputeBuffer(maxTriangleCount, Marshal.SizeOf<Triangle>(), ComputeBufferType.Append);
             _triCountBuffer = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
         }
 
-        void OnDestroy()
+        // NOTE: not a MonoBehaviour, so this will need to be called by the owning behaviour
+        public void OnDestroy()
         {
             if (Application.isPlaying)
             {
@@ -126,12 +118,14 @@ namespace Rebirth.Terrain.Meshing
         /// </summary>
         private void ReleaseBuffers()
         {
-            if (_pointBuffer != default(ComputeBuffer))
+            if (_pointBuffer == default)
             {
-                _pointBuffer.Release();
-                _triangleBuffer.Release();
-                _triCountBuffer.Release();
+                return;
             }
+
+            _pointBuffer.Release();
+            _triangleBuffer.Release();
+            _triCountBuffer.Release();
         }
     }
 }

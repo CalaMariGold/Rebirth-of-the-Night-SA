@@ -37,9 +37,11 @@ namespace Rebirth.Terrain.Chunk
         /// <summary>
         /// Returns a 1-D array containing the voxel Distance data in the chunk's 3-D data array.
         /// Indexing is determined with the following mapping:
-        ///     index(x, y, z) = z << (chunkWidthBits + chunkHeightBits) | y << chunkWidthBits | x,
+        /// <code><![CDATA[
+        ///    index(x, y, z) = z << (chunkWidthBits + chunkHeightBits) | y << chunkWidthBits | x
+        /// ]]></code>
         /// where (x, y, z) are local data array indices.
         /// </summary>
-        float[] CalcDistanceArray();
+        VoxelComputeInfo[] CalcDistanceArray();
     }
 }

@@ -12,16 +12,18 @@ struct Triangle
     float3 vertexC;
     float3 vertexB;
     float3 vertexA;
+    float4 colour;
 };
 
 struct VoxelInfo
 {
     float distance;
+    float4 colour;
 };
 
 /// Buffers.
 AppendStructuredBuffer<Triangle> triangles;
-RWStructuredBuffer<float> chunkPoints;
+RWStructuredBuffer<VoxelInfo> chunkPoints;
 
 /// Parameters to be set with the Compute Shader.
 int chunkWidth;
@@ -63,7 +65,7 @@ void March(int3 id : SV_DispatchThreadID)
     }
 
     // 8 corners of the current cube
-    float cubeCorners[8] =
+    VoxelInfo cubeCorners[8] =
     {
         chunkPoints[indexFromCoord(id.x, id.y, id.z)],
         chunkPoints[indexFromCoord(id.x + 1, id.y, id.z)],
@@ -94,7 +96,7 @@ void March(int3 id : SV_DispatchThreadID)
     int cubeIndex = 0;
     for (int i = 0; i < 8; i++)
     {
-        if (cubeCorners[i] > 0)
+        if (cubeCorners[i].distance > 0)
         {
             cubeIndex |= 1 << i;
         }
@@ -116,17 +118,18 @@ void March(int3 id : SV_DispatchThreadID)
 
         Triangle tri;
         tri.vertexA = interpolateVerts(
-            cubeCorners[a0], cubeCorners[b0],
+            cubeCorners[a0].distance, cubeCorners[b0].distance,
             cornerLocations[a0], cornerLocations[b0]
             );
         tri.vertexB = interpolateVerts(
-            cubeCorners[a1], cubeCorners[b1],
+            cubeCorners[a1].distance, cubeCorners[b1].distance,
             cornerLocations[a1], cornerLocations[b1]
             );
         tri.vertexC = interpolateVerts(
-            cubeCorners[a2], cubeCorners[b2],
+            cubeCorners[a2].distance, cubeCorners[b2].distance,
             cornerLocations[a2], cornerLocations[b2]
             );
+        tri.colour = cubeCorners[0].colour;
         
         triangles.Append(tri);
     }

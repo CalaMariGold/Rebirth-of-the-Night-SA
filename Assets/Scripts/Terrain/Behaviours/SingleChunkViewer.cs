@@ -32,7 +32,7 @@ namespace Rebirth.Terrain.Behaviours
         private IChunk _chunk;
         private GameObject _meshHolder;
         private IVoxelProvider _voxelProvider;
-        private IMeshGenerator _meshGenerator;
+        private MarchingCubes _meshGenerator;
         private VoxelTypeRepository _voxelTypeRepository;
 
         private void Awake()
@@ -57,6 +57,11 @@ namespace Rebirth.Terrain.Behaviours
         private void OnValidate()
         {
             _settingsUpdated = true;
+        }
+
+        private void OnDestroy()
+        {
+            _meshGenerator?.OnDestroy();
         }
 
         private void Run()

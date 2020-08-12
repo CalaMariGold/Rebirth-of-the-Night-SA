@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 namespace Rebirth.Terrain.Meshing
@@ -6,11 +7,14 @@ namespace Rebirth.Terrain.Meshing
     /// A triangle composed of three points in 3-D space,
     /// with each point represented as a Vector3.
     /// </summary>
-    public struct Triangle
+    [StructLayout(LayoutKind.Sequential)]
+    public readonly struct Triangle
     {
-        private Vector3 _point0;
-        private Vector3 _point1;
-        private Vector3 _point2;
+#pragma warning disable 649
+        private readonly Vector3 _point0;
+        private readonly Vector3 _point1;
+        private readonly Vector3 _point2;
+#pragma warning restore 649
 
         /// <summary>
         /// Gets the corresponding point of the triangle.
@@ -30,5 +34,8 @@ namespace Rebirth.Terrain.Meshing
                 }
             }
         }
+
+        // ReSharper disable once UnassignedGetOnlyAutoProperty
+        public Color Color { get; }
     }
 }

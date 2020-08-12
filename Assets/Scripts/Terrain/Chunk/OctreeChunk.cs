@@ -1,6 +1,5 @@
 using Rebirth.Terrain.Octree;
 using Rebirth.Terrain.Voxel;
-using UnityEngine;
 
 namespace Rebirth.Terrain.Chunk
 {
@@ -78,23 +77,24 @@ namespace Rebirth.Terrain.Chunk
         /// <summary>
         /// Returns a 1-D array containing the voxel Distance data in the chunk's 3-D data array.
         /// Indexing is determined with the following mapping:
-        ///     index(x, y, z) = z << (chunkWidthBits + chunkHeightBits) | y << chunkWidthBits | x,
+        /// <code><![CDATA[
+        ///    index(x, y, z) = z << (chunkWidthBits + chunkHeightBits) | y << chunkWidthBits | x
+        /// ]]></code>
         /// where (x, y, z) are local data array indices.
         /// </summary>
-        public float[] CalcDistanceArray()
+        public VoxelComputeInfo[] CalcDistanceArray()
         {
-            int chunkWidthBits  = (int) Mathf.Log(Width - 1, 2) + 1;
-            int chunkHeightBits  = (int) Mathf.Log(Height - 1, 2) + 1;
-            float[] chunkData = new float[Width * Height * Depth];
-
+            var chunkData = new VoxelComputeInfo[Width * Height * Depth];
+            // TODO: iterate octree recursively to improve efficiency
+            // Currently O(n log n) but could be improved to O(n)
             for (var x = 0; x < Width; x++)
             {
                 for (var y = 0; y < Height; y++)
                 {
                     for (var z = 0; z < Depth; z++)
                     {
-                        int index = z << (chunkWidthBits + chunkHeightBits) | y << chunkWidthBits | x;
-                        chunkData[index] = _voxelData[x, y, z].Distance;
+                        var index = z << (_voxelData.Subdivisions * 2) | y << _voxelData.Subdivisions | x;
+                        chunkData[index] = _voxelData[x, y, z].ToCompute();
                     }
                 }
             }
