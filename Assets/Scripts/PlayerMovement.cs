@@ -1,6 +1,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 using UnityEngine;
 
@@ -9,9 +10,11 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    #region Member Variables
+    #region Member Fields
+
+    //Exposed to editor
     [Header("Movement Speed")]
-    [SerializeField] private float _baseSpeed = 6.75f;
+    [SerializeField] private float _baseSpeed = 5f;
     [SerializeField] private float _sprintMultiplier = 1.5f;
     [SerializeField] private float _crouchMultiplier = 0.5f;
     [SerializeField] private float _reverseMultiplier = 0.5f;
@@ -19,7 +22,7 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Jumping")]
     [SerializeField] private float _jumpForce = 4.5f;
-    [SerializeField] private float _jumpCooldown = 1f;
+    [SerializeField] private float _jumpCooldown = 0.5f;
 
     [Header("Physics")]
     [SerializeField] private float _gravity = 9.81f;
@@ -31,7 +34,9 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float _groundFriction = 0.75f;
     [Space]
     [SerializeField, Range(0f, 90f)] private float _slopeLimit = 45f;
-    [SerializeField] private float _slopeMagnetDistance = 0.5f;
+    [SerializeField] private float _playerHeightAdjust = 0.125f;
+    [SerializeField] private float _groundMagnetDistance = 0.125f;
+    [SerializeField] private float _groundedDownforce = 1.5f;
 
     private float _speedMultiplier = 1f;
 
@@ -41,10 +46,10 @@ public class PlayerMovement : MonoBehaviour
 
     [SerializeField, ReadOnly(true)] private bool _isGrounded = false;
     [SerializeField, ReadOnly(true)] private bool _wasGrounded = false;
-    [SerializeField, ReadOnly(true)] private Vector3 _groundNormal = Vector3.up;
-    [SerializeField, ReadOnly(true)] private Vector3 _lastNormal = Vector3.up;
+    [SerializeField, ReadOnly(true)] private bool _jumping = false;
+    private Vector3 _groundNormal = Vector3.up;
 
-
+    // Components
     private PlayerControls _playerControls;
     private Rigidbody _rigidbody;
     private CapsuleCollider _collider;
@@ -54,7 +59,6 @@ public class PlayerMovement : MonoBehaviour
     private void Awake()
     {
         _groundNormal = Vector3.up;
-        _lastNormal = Vector3.up;
 
         _playerControls = new PlayerControls();
         _rigidbody = GetComponent<Rigidbody>();
@@ -69,41 +73,14 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        Locomotion();
-        Gravity();
         Friction();
-        CheckSlopeChange();
+        Gravity();
+        Locomotion();
 
         _wasGrounded = _isGrounded;
-        _lastNormal = _groundNormal;
+        _isGrounded = CheckGround();
 
-        _isGrounded = false;
-        _groundNormal = transform.up;
-    }
-
-    private void OnCollisionStay(Collision collision)
-    {
-        var contacts = new ContactPoint[collision.contactCount];
-        var groundNormal = Vector3.zero;
-
-        collision.GetContacts(contacts);
-
-        foreach (var contact in contacts)
-        {
-            var bottom = _collider.bounds.center - Vector3.up * _collider.bounds.extents.y;
-            var curve = bottom + (Vector3.up * _collider.radius);
-            var dir = curve - contact.point;
-            var angle = Vector3.Angle(contact.normal, transform.up);
-
-            //Checks if contact is valid ground
-            if (dir.y > 0f && (Mathf.Abs(angle) <= _slopeLimit))
-            {
-                _isGrounded = true;
-                groundNormal += contact.normal;
-            }
-        }
-        // Sets normalized average of valid ground normals if grounded
-        _groundNormal = groundNormal == Vector3.zero ? transform.up : groundNormal.normalized;
+        _jumping = (!_wasGrounded || _isGrounded) && _jumping;
     }
 
     private void OnEnable()
@@ -121,6 +98,11 @@ public class PlayerMovement : MonoBehaviour
     private void Locomotion()
     { 
         var movement = _playerControls.Default.Move.ReadValue<Vector2>() * _baseSpeed * _speedMultiplier;
+
+        if(movement.magnitude <= _minSpeed)
+        {
+            return;
+        }
 
         // Reduces travel speed and prevents sprinting when traveling backwards
         if (movement.y <= 0)
@@ -141,12 +123,9 @@ public class PlayerMovement : MonoBehaviour
                 // Reduces velocity when climbing a slope
                 var speedScale = 1 - incline / 90.0f;
                 hVel *= speedScale;
-                _rigidbody.velocity = hVel + _rigidbody.velocity.y * transform.up;
-            } else
-            {
-                // Rotates velocity to align with slope when descending a slope
-                _rigidbody.velocity = AlignVectorWithGround(hVel) + GetGravityVelocity();
             }
+
+            _rigidbody.velocity = hVel + _rigidbody.velocity.y * Vector3.up;
         } else
         {
             var airAcceleration = movement.normalized * _airAcceleration;
@@ -157,11 +136,18 @@ public class PlayerMovement : MonoBehaviour
 
     private void Gravity()
     {
-        _rigidbody.AddForce(_groundNormal * -_gravity, ForceMode.Acceleration);
-
-        // Limits vertical speed within defined bounds
         var velocity = _rigidbody.velocity;
-        velocity.y = Mathf.Clamp(_rigidbody.velocity.y, _terminalVelocity, _maxUpwardVelocity);
+        if (!_isGrounded)
+        {
+            _rigidbody.AddForce(transform.up * -_gravity, ForceMode.Acceleration);
+
+            // Limits vertical speed within defined bounds
+            velocity.y = Mathf.Clamp(_rigidbody.velocity.y, _terminalVelocity, _maxUpwardVelocity);
+
+            _rigidbody.velocity = velocity;
+        } else if(!_jumping){
+            velocity.y = -_groundedDownforce;
+        }
 
         _rigidbody.velocity = velocity;
     }
@@ -177,40 +163,47 @@ public class PlayerMovement : MonoBehaviour
         _rigidbody.velocity = hVel + _rigidbody.velocity.y * transform.up;
     }
 
-    private void CheckSlopeChange()
-    {
-        if (_wasGrounded && !_isGrounded)
-        {
-            var rayHit = Physics.Raycast(transform.position, -transform.up, out var hit, _slopeMagnetDistance);
 
-            if (rayHit && Vector3.Angle(hit.normal, transform.up) < _slopeLimit)
+    private bool CheckGround()
+    {
+        var rayLen = _playerHeightAdjust + _collider.bounds.extents.y;
+        var rayHit = Physics.Raycast(_collider.bounds.center, -transform.up, out var hit, rayLen + _groundMagnetDistance);
+        var slopeValid = Vector3.Angle(hit.normal, transform.up) <= _slopeLimit;
+
+        if (rayHit && slopeValid)
+        {
+            if (!_jumping)
             {
-                var rotation = Quaternion.FromToRotation(_lastNormal, hit.normal);
-                _rigidbody.velocity = rotation * _rigidbody.velocity;
-            }
+                //Adjust players height to properly 
+                var adjPos = transform.position;
+                adjPos.y = adjPos.y + rayLen - hit.distance;
+                transform.position = adjPos;
+
+                //Ensures player doesn't jitter when rigid body isn't contacting ground
+                _rigidbody.constraints |= RigidbodyConstraints.FreezePositionY;
+            } 
+            _groundNormal = hit.normal;
+
+            return true;
         }
 
-    }
-
-    private Vector3 GetGravityVelocity()
-    {
-        var gravSpeed = AlignVectorWithGround(_rigidbody.velocity).y;
-        return _groundNormal * gravSpeed;
-    }
-
-    private Vector3 AlignVectorWithGround(Vector3 v)
-    {
-        var rotation = Quaternion.FromToRotation(transform.up, _groundNormal);
-        return rotation * v;
+        _rigidbody.constraints &= ~RigidbodyConstraints.FreezePositionY;
+        _groundNormal = transform.up;
+        return false;
     }
 
     private void Jump()
     {
         if (_isGrounded && _canJump)
         {
-            _wasGrounded = false;
+            _jumping = true;
+            _rigidbody.constraints &= ~RigidbodyConstraints.FreezePositionY;
+            var velocity = _rigidbody.velocity;
+            velocity.y = _jumpForce;
+            _rigidbody.velocity = velocity;
+
             _isGrounded = false;
-            _rigidbody.AddForce(_groundNormal * _jumpForce, ForceMode.VelocityChange);
+
             StartCoroutine(JumpCooldown());
         }
     }
