@@ -49,25 +49,19 @@ namespace Rebirth.Player
         private Vector3 _groundNormal = Vector3.up;
 
         // Components
-        private PlayerControls _playerControls;
         private Rigidbody _rigidbody;
         private CapsuleCollider _collider;
+        
+        public Vector2 Movement { get; set; }
         #endregion
 
         #region Monobehaviour
         private void Awake()
         {
             _groundNormal = Vector3.up;
-
-            _playerControls = new PlayerControls();
+            
             _rigidbody = GetComponent<Rigidbody>();
             _collider = GetComponent<CapsuleCollider>();
-
-            _playerControls.Default.Jump.started += context => Jump();
-            _playerControls.Default.Sprint.started += context => SprintStarted();
-            _playerControls.Default.Sprint.canceled += context => SprintCanceled();
-            _playerControls.Default.Crouch.started += context => CrouchStarted();
-            _playerControls.Default.Crouch.canceled += context => CrouchCanceled();
         }
 
         private void FixedUpdate()
@@ -81,22 +75,64 @@ namespace Rebirth.Player
 
             _jumping = (!_wasGrounded || _isGrounded) && _jumping;
         }
-
-        private void OnEnable()
-        {
-            _playerControls.Enable();
-        }
-
-        private void OnDisable()
-        {
-            _playerControls.Disable();
-        }
         #endregion
 
         #region Member Methods
+        public void Jump()
+        {
+            if (_isGrounded && _canJump)
+            {
+                _jumping = true;
+                _rigidbody.constraints &= ~RigidbodyConstraints.FreezePositionY;
+                var velocity = _rigidbody.velocity;
+                velocity.y = _jumpForce;
+                _rigidbody.velocity = velocity;
+
+                _isGrounded = false;
+
+                StartCoroutine(JumpCooldown());
+            }
+        }
+        
+        public void SprintStarted()
+        {
+            if (!_sprinting)
+            {
+                _sprinting = true;
+                _speedMultiplier *= _sprintMultiplier;
+            }
+        }
+
+        public void SprintCanceled()
+        {
+            if (_sprinting)
+            {
+                _sprinting = false;
+                _speedMultiplier /= _sprintMultiplier;
+            }
+        }
+
+        public void CrouchStarted()
+        {
+            if (!_crouching)
+            {
+                _crouching = true;
+                _speedMultiplier *= _crouchMultiplier;
+            }
+        }
+
+        public void CrouchCanceled()
+        {
+            if (_crouching)
+            {
+                _crouching = false;
+                _speedMultiplier /= _crouchMultiplier;
+            }
+        }
+        
         private void Locomotion()
         { 
-            var movement = _baseSpeed * _speedMultiplier * _playerControls.Default.Move.ReadValue<Vector2>();
+            var movement = _baseSpeed * _speedMultiplier * Movement;
 
             if(movement.magnitude <= _minSpeed)
             {
@@ -194,63 +230,11 @@ namespace Rebirth.Player
             return false;
         }
 
-        private void Jump()
-        {
-            if (_isGrounded && _canJump)
-            {
-                _jumping = true;
-                _rigidbody.constraints &= ~RigidbodyConstraints.FreezePositionY;
-                var velocity = _rigidbody.velocity;
-                velocity.y = _jumpForce;
-                _rigidbody.velocity = velocity;
-
-                _isGrounded = false;
-
-                StartCoroutine(JumpCooldown());
-            }
-        }
-
         private IEnumerator JumpCooldown()
         {
             _canJump = false;
             yield return new WaitForSeconds(_jumpCooldown);
             _canJump = true;
-        }
-
-        private void SprintStarted()
-        {
-            if (!_sprinting)
-            {
-                _sprinting = true;
-                _speedMultiplier *= _sprintMultiplier;
-            }
-        }
-
-        private void SprintCanceled()
-        {
-            if (_sprinting)
-            {
-                _sprinting = false;
-                _speedMultiplier /= _sprintMultiplier;
-            }
-        }
-
-        private void CrouchStarted()
-        {
-            if (!_crouching)
-            {
-                _crouching = true;
-                _speedMultiplier *= _crouchMultiplier;
-            }
-        }
-
-        private void CrouchCanceled()
-        {
-            if (_crouching)
-            {
-                _crouching = false;
-                _speedMultiplier /= _crouchMultiplier;
-            }
         }
         #endregion
     }
