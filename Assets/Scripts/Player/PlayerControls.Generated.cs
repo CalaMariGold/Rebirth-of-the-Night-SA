@@ -1,4 +1,4 @@
-// GENERATED AUTOMATICALLY FROM 'Assets/Scripts/PlayerControls.inputactions'
+// GENERATED AUTOMATICALLY FROM 'Assets/Scripts/Player/PlayerControls.inputactions'
 
 using System;
 using System.Collections;
@@ -6,12 +6,14 @@ using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
 
-public class @PlayerControls : IInputActionCollection, IDisposable
+namespace Rebirth.Player
 {
-    public InputActionAsset asset { get; }
-    public @PlayerControls()
+    public class @PlayerControls : IInputActionCollection, IDisposable
     {
-        asset = InputActionAsset.FromJson(@"{
+        public InputActionAsset asset { get; }
+        public @PlayerControls()
+        {
+            asset = InputActionAsset.FromJson(@"{
     ""name"": ""PlayerControls"",
     ""maps"": [
         {
@@ -164,129 +166,130 @@ public class @PlayerControls : IInputActionCollection, IDisposable
     ],
     ""controlSchemes"": []
 }");
-        // Default
-        m_Default = asset.FindActionMap("Default", throwIfNotFound: true);
-        m_Default_Look = m_Default.FindAction("Look", throwIfNotFound: true);
-        m_Default_Move = m_Default.FindAction("Move", throwIfNotFound: true);
-        m_Default_Crouch = m_Default.FindAction("Crouch", throwIfNotFound: true);
-        m_Default_Sprint = m_Default.FindAction("Sprint", throwIfNotFound: true);
-        m_Default_Jump = m_Default.FindAction("Jump", throwIfNotFound: true);
-    }
+            // Default
+            m_Default = asset.FindActionMap("Default", throwIfNotFound: true);
+            m_Default_Look = m_Default.FindAction("Look", throwIfNotFound: true);
+            m_Default_Move = m_Default.FindAction("Move", throwIfNotFound: true);
+            m_Default_Crouch = m_Default.FindAction("Crouch", throwIfNotFound: true);
+            m_Default_Sprint = m_Default.FindAction("Sprint", throwIfNotFound: true);
+            m_Default_Jump = m_Default.FindAction("Jump", throwIfNotFound: true);
+        }
 
-    public void Dispose()
-    {
-        UnityEngine.Object.Destroy(asset);
-    }
-
-    public InputBinding? bindingMask
-    {
-        get => asset.bindingMask;
-        set => asset.bindingMask = value;
-    }
-
-    public ReadOnlyArray<InputDevice>? devices
-    {
-        get => asset.devices;
-        set => asset.devices = value;
-    }
-
-    public ReadOnlyArray<InputControlScheme> controlSchemes => asset.controlSchemes;
-
-    public bool Contains(InputAction action)
-    {
-        return asset.Contains(action);
-    }
-
-    public IEnumerator<InputAction> GetEnumerator()
-    {
-        return asset.GetEnumerator();
-    }
-
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
-
-    public void Enable()
-    {
-        asset.Enable();
-    }
-
-    public void Disable()
-    {
-        asset.Disable();
-    }
-
-    // Default
-    private readonly InputActionMap m_Default;
-    private IDefaultActions m_DefaultActionsCallbackInterface;
-    private readonly InputAction m_Default_Look;
-    private readonly InputAction m_Default_Move;
-    private readonly InputAction m_Default_Crouch;
-    private readonly InputAction m_Default_Sprint;
-    private readonly InputAction m_Default_Jump;
-    public struct DefaultActions
-    {
-        private @PlayerControls m_Wrapper;
-        public DefaultActions(@PlayerControls wrapper) { m_Wrapper = wrapper; }
-        public InputAction @Look => m_Wrapper.m_Default_Look;
-        public InputAction @Move => m_Wrapper.m_Default_Move;
-        public InputAction @Crouch => m_Wrapper.m_Default_Crouch;
-        public InputAction @Sprint => m_Wrapper.m_Default_Sprint;
-        public InputAction @Jump => m_Wrapper.m_Default_Jump;
-        public InputActionMap Get() { return m_Wrapper.m_Default; }
-        public void Enable() { Get().Enable(); }
-        public void Disable() { Get().Disable(); }
-        public bool enabled => Get().enabled;
-        public static implicit operator InputActionMap(DefaultActions set) { return set.Get(); }
-        public void SetCallbacks(IDefaultActions instance)
+        public void Dispose()
         {
-            if (m_Wrapper.m_DefaultActionsCallbackInterface != null)
+            UnityEngine.Object.Destroy(asset);
+        }
+
+        public InputBinding? bindingMask
+        {
+            get => asset.bindingMask;
+            set => asset.bindingMask = value;
+        }
+
+        public ReadOnlyArray<InputDevice>? devices
+        {
+            get => asset.devices;
+            set => asset.devices = value;
+        }
+
+        public ReadOnlyArray<InputControlScheme> controlSchemes => asset.controlSchemes;
+
+        public bool Contains(InputAction action)
+        {
+            return asset.Contains(action);
+        }
+
+        public IEnumerator<InputAction> GetEnumerator()
+        {
+            return asset.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public void Enable()
+        {
+            asset.Enable();
+        }
+
+        public void Disable()
+        {
+            asset.Disable();
+        }
+
+        // Default
+        private readonly InputActionMap m_Default;
+        private IDefaultActions m_DefaultActionsCallbackInterface;
+        private readonly InputAction m_Default_Look;
+        private readonly InputAction m_Default_Move;
+        private readonly InputAction m_Default_Crouch;
+        private readonly InputAction m_Default_Sprint;
+        private readonly InputAction m_Default_Jump;
+        public struct DefaultActions
+        {
+            private @PlayerControls m_Wrapper;
+            public DefaultActions(@PlayerControls wrapper) { m_Wrapper = wrapper; }
+            public InputAction @Look => m_Wrapper.m_Default_Look;
+            public InputAction @Move => m_Wrapper.m_Default_Move;
+            public InputAction @Crouch => m_Wrapper.m_Default_Crouch;
+            public InputAction @Sprint => m_Wrapper.m_Default_Sprint;
+            public InputAction @Jump => m_Wrapper.m_Default_Jump;
+            public InputActionMap Get() { return m_Wrapper.m_Default; }
+            public void Enable() { Get().Enable(); }
+            public void Disable() { Get().Disable(); }
+            public bool enabled => Get().enabled;
+            public static implicit operator InputActionMap(DefaultActions set) { return set.Get(); }
+            public void SetCallbacks(IDefaultActions instance)
             {
-                @Look.started -= m_Wrapper.m_DefaultActionsCallbackInterface.OnLook;
-                @Look.performed -= m_Wrapper.m_DefaultActionsCallbackInterface.OnLook;
-                @Look.canceled -= m_Wrapper.m_DefaultActionsCallbackInterface.OnLook;
-                @Move.started -= m_Wrapper.m_DefaultActionsCallbackInterface.OnMove;
-                @Move.performed -= m_Wrapper.m_DefaultActionsCallbackInterface.OnMove;
-                @Move.canceled -= m_Wrapper.m_DefaultActionsCallbackInterface.OnMove;
-                @Crouch.started -= m_Wrapper.m_DefaultActionsCallbackInterface.OnCrouch;
-                @Crouch.performed -= m_Wrapper.m_DefaultActionsCallbackInterface.OnCrouch;
-                @Crouch.canceled -= m_Wrapper.m_DefaultActionsCallbackInterface.OnCrouch;
-                @Sprint.started -= m_Wrapper.m_DefaultActionsCallbackInterface.OnSprint;
-                @Sprint.performed -= m_Wrapper.m_DefaultActionsCallbackInterface.OnSprint;
-                @Sprint.canceled -= m_Wrapper.m_DefaultActionsCallbackInterface.OnSprint;
-                @Jump.started -= m_Wrapper.m_DefaultActionsCallbackInterface.OnJump;
-                @Jump.performed -= m_Wrapper.m_DefaultActionsCallbackInterface.OnJump;
-                @Jump.canceled -= m_Wrapper.m_DefaultActionsCallbackInterface.OnJump;
-            }
-            m_Wrapper.m_DefaultActionsCallbackInterface = instance;
-            if (instance != null)
-            {
-                @Look.started += instance.OnLook;
-                @Look.performed += instance.OnLook;
-                @Look.canceled += instance.OnLook;
-                @Move.started += instance.OnMove;
-                @Move.performed += instance.OnMove;
-                @Move.canceled += instance.OnMove;
-                @Crouch.started += instance.OnCrouch;
-                @Crouch.performed += instance.OnCrouch;
-                @Crouch.canceled += instance.OnCrouch;
-                @Sprint.started += instance.OnSprint;
-                @Sprint.performed += instance.OnSprint;
-                @Sprint.canceled += instance.OnSprint;
-                @Jump.started += instance.OnJump;
-                @Jump.performed += instance.OnJump;
-                @Jump.canceled += instance.OnJump;
+                if (m_Wrapper.m_DefaultActionsCallbackInterface != null)
+                {
+                    @Look.started -= m_Wrapper.m_DefaultActionsCallbackInterface.OnLook;
+                    @Look.performed -= m_Wrapper.m_DefaultActionsCallbackInterface.OnLook;
+                    @Look.canceled -= m_Wrapper.m_DefaultActionsCallbackInterface.OnLook;
+                    @Move.started -= m_Wrapper.m_DefaultActionsCallbackInterface.OnMove;
+                    @Move.performed -= m_Wrapper.m_DefaultActionsCallbackInterface.OnMove;
+                    @Move.canceled -= m_Wrapper.m_DefaultActionsCallbackInterface.OnMove;
+                    @Crouch.started -= m_Wrapper.m_DefaultActionsCallbackInterface.OnCrouch;
+                    @Crouch.performed -= m_Wrapper.m_DefaultActionsCallbackInterface.OnCrouch;
+                    @Crouch.canceled -= m_Wrapper.m_DefaultActionsCallbackInterface.OnCrouch;
+                    @Sprint.started -= m_Wrapper.m_DefaultActionsCallbackInterface.OnSprint;
+                    @Sprint.performed -= m_Wrapper.m_DefaultActionsCallbackInterface.OnSprint;
+                    @Sprint.canceled -= m_Wrapper.m_DefaultActionsCallbackInterface.OnSprint;
+                    @Jump.started -= m_Wrapper.m_DefaultActionsCallbackInterface.OnJump;
+                    @Jump.performed -= m_Wrapper.m_DefaultActionsCallbackInterface.OnJump;
+                    @Jump.canceled -= m_Wrapper.m_DefaultActionsCallbackInterface.OnJump;
+                }
+                m_Wrapper.m_DefaultActionsCallbackInterface = instance;
+                if (instance != null)
+                {
+                    @Look.started += instance.OnLook;
+                    @Look.performed += instance.OnLook;
+                    @Look.canceled += instance.OnLook;
+                    @Move.started += instance.OnMove;
+                    @Move.performed += instance.OnMove;
+                    @Move.canceled += instance.OnMove;
+                    @Crouch.started += instance.OnCrouch;
+                    @Crouch.performed += instance.OnCrouch;
+                    @Crouch.canceled += instance.OnCrouch;
+                    @Sprint.started += instance.OnSprint;
+                    @Sprint.performed += instance.OnSprint;
+                    @Sprint.canceled += instance.OnSprint;
+                    @Jump.started += instance.OnJump;
+                    @Jump.performed += instance.OnJump;
+                    @Jump.canceled += instance.OnJump;
+                }
             }
         }
-    }
-    public DefaultActions @Default => new DefaultActions(this);
-    public interface IDefaultActions
-    {
-        void OnLook(InputAction.CallbackContext context);
-        void OnMove(InputAction.CallbackContext context);
-        void OnCrouch(InputAction.CallbackContext context);
-        void OnSprint(InputAction.CallbackContext context);
-        void OnJump(InputAction.CallbackContext context);
+        public DefaultActions @Default => new DefaultActions(this);
+        public interface IDefaultActions
+        {
+            void OnLook(InputAction.CallbackContext context);
+            void OnMove(InputAction.CallbackContext context);
+            void OnCrouch(InputAction.CallbackContext context);
+            void OnSprint(InputAction.CallbackContext context);
+            void OnJump(InputAction.CallbackContext context);
+        }
     }
 }
