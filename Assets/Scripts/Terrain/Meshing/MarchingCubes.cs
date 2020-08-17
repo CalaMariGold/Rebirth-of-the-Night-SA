@@ -51,9 +51,9 @@ namespace Rebirth.Terrain.Meshing
             computeShader.SetInt("chunkDepth", chunk.Depth);
 
             // Determine number of thread groups to use for each axis
-            var numThreadGroupsX = Mathf.CeilToInt (chunk.Width / (float) _threadGroupSize);
-            var numThreadGroupsY = Mathf.CeilToInt (chunk.Height / (float) _threadGroupSize);
-            var numThreadGroupsZ = Mathf.CeilToInt (chunk.Depth / (float) _threadGroupSize);
+            var numThreadGroupsX = Mathf.CeilToInt(chunk.Width / (float) _threadGroupSize);
+            var numThreadGroupsY = Mathf.CeilToInt(chunk.Height / (float) _threadGroupSize);
+            var numThreadGroupsZ = Mathf.CeilToInt(chunk.Depth / (float) _threadGroupSize);
 
             // Dispatch
             computeShader.Dispatch(0, numThreadGroupsX, numThreadGroupsY, numThreadGroupsZ);
