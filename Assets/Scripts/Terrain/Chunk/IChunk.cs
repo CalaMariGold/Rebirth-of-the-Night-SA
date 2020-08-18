@@ -27,6 +27,21 @@ namespace Rebirth.Terrain.Chunk
         /// Gets the depth of the chunk in the z-axis.
         /// </summary>
         int Depth { get; }
+        
+        /// <summary>
+        /// Gets or sets the offset of the chunk in the x-axis.
+        /// </summary>
+        int OffsetX { get; set; }
+        
+        /// <summary>
+        /// Gets or sets the offset of the chunk in the y-axis.
+        /// </summary>
+        int OffsetY { get; set; }
+        
+        /// <summary>
+        /// Gets or sets the offset of the chunk in the z-axis.
+        /// </summary>
+        int OffsetZ { get; set; }
 
         /// <summary>
         /// Fills the chunk with voxels from a provider.

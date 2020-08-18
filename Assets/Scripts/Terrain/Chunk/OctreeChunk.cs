@@ -8,24 +8,21 @@ namespace Rebirth.Terrain.Chunk
     /// </summary>
     public class OctreeChunk : IChunk
     {
-        private readonly int _xOffset;
-        private readonly int _yOffset;
-        private readonly int _zOffset;
         private readonly DenseOctree<VoxelInfo> _voxelData;
 
         /// <summary>
         /// Initialises a new instance of the <see cref="OctreeChunk"/> class.
         /// </summary>
         /// <param name="subdivisions">The number of subdivisions in the octree.</param>
-        /// <param name="xOffset">The offset of the chunk in the x-axis.</param>
-        /// <param name="yOffset">The offset of the chunk in the y-axis.</param>
-        /// <param name="zOffset">The offset of the chunk in the z-axis.</param>
-        public OctreeChunk(int subdivisions, int xOffset, int yOffset, int zOffset)
+        /// <param name="offsetX">The offset of the chunk in the x-axis.</param>
+        /// <param name="offsetY">The offset of the chunk in the y-axis.</param>
+        /// <param name="offsetZ">The offset of the chunk in the z-axis.</param>
+        public OctreeChunk(int subdivisions, int offsetX, int offsetY, int offsetZ)
         {
             // Set the offset in voxel space of the chunk
-            _xOffset = xOffset;
-            _yOffset = yOffset;
-            _zOffset = zOffset;
+            OffsetX = offsetX;
+            OffsetY = offsetY;
+            OffsetZ = offsetZ;
             // Initialise the octree holding voxel data
             _voxelData = new DenseOctree<VoxelInfo>(subdivisions);
         }
@@ -48,6 +45,10 @@ namespace Rebirth.Terrain.Chunk
         /// </summary>
         public int Depth => 1 << _voxelData.Subdivisions;
         
+        public int OffsetX { get; set; }
+        public int OffsetY { get; set; }
+        public int OffsetZ { get; set; }
+        
         /// <summary>
         /// Fills the data octree with voxels from a provider.
         /// </summary>
@@ -63,9 +64,9 @@ namespace Rebirth.Terrain.Chunk
                         _voxelData.SetByIndex(
                             x, y, z,
                             voxelProvider.GetVoxelInfo(
-                                x + _xOffset,
-                                y + _yOffset,
-                                z + _zOffset
+                                x + OffsetX,
+                                y + OffsetY,
+                                z + OffsetZ
                             ),
                             true
                         );

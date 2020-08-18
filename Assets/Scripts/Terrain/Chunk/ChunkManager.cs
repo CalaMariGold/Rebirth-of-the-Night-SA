@@ -26,6 +26,8 @@ namespace Rebirth.Terrain.Chunk
         private ConcurrentQueue<(Vector3Int, IChunk)> _freshChunks;
         // Chunk load queue consumed by the load thread
         private BlockingCollection<Vector3Int> _chunksToLoad;
+        // Recyclable chunks which can be reused to save memory
+        private ConcurrentBag<IChunk> _recyclableChunks;
         // Chunk creation function for DI
         private Func<int, int, int, IChunk> _chunkFactory;
         // Voxel provider for DI
@@ -56,6 +58,7 @@ namespace Rebirth.Terrain.Chunk
             _loadingChunks = new HashSet<Vector3Int>();
             _freshChunks = new ConcurrentQueue<(Vector3Int, IChunk)>();
             _chunksToLoad = new BlockingCollection<Vector3Int>(new ConcurrentQueue<Vector3Int>());
+            _recyclableChunks = new ConcurrentBag<IChunk>();
         }
 
         private void OnEnable()
@@ -95,8 +98,17 @@ namespace Rebirth.Terrain.Chunk
                 }
                 // Load chunk by location
                 var offset = chunkToLoad * _chunkSize;
-                // TODO: use recyclable chunks where possible
-                var chunk = _chunkFactory(offset.x, offset.y, offset.z);
+                if (_recyclableChunks.TryTake(out var chunk))
+                {
+                    // Recycle an old chunk by updating its offset
+                    chunk.OffsetX = offset.x;
+                    chunk.OffsetY = offset.y;
+                    chunk.OffsetZ = offset.z;
+                }
+                else
+                {
+                    chunk = _chunkFactory(offset.x, offset.y, offset.z);
+                }
                 chunk.Load(_voxelProvider);
                 _freshChunks.Enqueue((chunkToLoad, chunk));
             }
@@ -149,8 +161,13 @@ namespace Rebirth.Terrain.Chunk
             // Recycle old loaded chunk memory we no longer need
             foreach (var chunkPos in _loadedChunks.Keys.Except(chunksToLoad).ToArray())
             {
+                var chunk = _loadedChunks[chunkPos];
                 _loadedChunks.Remove(chunkPos);
-                // TODO: _recyclableChunks.Add(oldChunk);
+                // Only recycle if the chunk size hasn't changed
+                if (chunk.Width == _chunkSize)
+                {
+                    _recyclableChunks.Add(chunk);
+                }
             }
             
             // Add chunks we still need to load to the load queue
