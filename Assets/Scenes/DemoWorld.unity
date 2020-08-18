@@ -2999,6 +2999,26 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1628124207396029920, guid: 204c5564d335b7744b4ca526d6ce5765, type: 3}
+      propertyPath: _groundFriction
+      value: 0.35
+      objectReference: {fileID: 0}
+    - target: {fileID: 1628124207396029920, guid: 204c5564d335b7744b4ca526d6ce5765, type: 3}
+      propertyPath: _baseSpeed
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 1628124207396029920, guid: 204c5564d335b7744b4ca526d6ce5765, type: 3}
+      propertyPath: _jumpForce
+      value: 5.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1628124207396029920, guid: 204c5564d335b7744b4ca526d6ce5765, type: 3}
+      propertyPath: _gravity
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 1628124207396029920, guid: 204c5564d335b7744b4ca526d6ce5765, type: 3}
+      propertyPath: _groundMagnetDistance
+      value: 0.05
+      objectReference: {fileID: 0}
     - target: {fileID: 1628124207396029921, guid: 204c5564d335b7744b4ca526d6ce5765, type: 3}
       propertyPath: m_LocalPosition.x
       value: 2

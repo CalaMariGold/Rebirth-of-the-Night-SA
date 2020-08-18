@@ -66,12 +66,13 @@ namespace Rebirth.Player
 
         private void FixedUpdate()
         {
+            _wasGrounded = _isGrounded;
+            _isGrounded = CheckGround();
             Friction();
             Gravity();
             Locomotion();
 
-            _wasGrounded = _isGrounded;
-            _isGrounded = CheckGround();
+
 
             _jumping = (!_wasGrounded || _isGrounded) && _jumping;
         }
