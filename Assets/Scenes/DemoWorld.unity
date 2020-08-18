@@ -364,6 +364,7 @@ GameObject:
   m_Component:
   - component: {fileID: 813522796}
   - component: {fileID: 813522795}
+  - component: {fileID: 813522797}
   m_Layer: 0
   m_Name: Terrain Manager
   m_TagString: Untagged
@@ -400,6 +401,19 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &813522797
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 813522794}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 534e97f8b8bb40e6aa42388c64b44f19, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _chunkSize: 32
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
