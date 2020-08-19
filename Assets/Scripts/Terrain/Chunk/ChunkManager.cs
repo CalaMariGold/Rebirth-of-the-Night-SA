@@ -53,7 +53,6 @@ namespace Rebirth.Terrain.Chunk
         private void Awake()
         {
             // Create required objects and collections for Async chunk loads
-            _tokenSource = new CancellationTokenSource();
             _loadedChunks = new Dictionary<Vector3Int, IChunk>();
             _loadingChunks = new HashSet<Vector3Int>();
             _freshChunks = new ConcurrentQueue<(Vector3Int, IChunk)>();
@@ -63,7 +62,8 @@ namespace Rebirth.Terrain.Chunk
 
         private void OnEnable()
         {
-            // Consume the cancellation token and use it to start the chunk load task
+            // Consume a cancellation token and use it to start the chunk load task
+            _tokenSource = new CancellationTokenSource();
             var token = _tokenSource.Token;
             Task.Run(() => LoadChunks(token), token);
         }
