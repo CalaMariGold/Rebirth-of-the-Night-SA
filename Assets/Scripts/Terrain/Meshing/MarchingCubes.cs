@@ -102,6 +102,8 @@ namespace Rebirth.Terrain.Meshing
             _pointBuffer = new ComputeBuffer(numVoxels, Marshal.SizeOf<VoxelComputeInfo>());
             _triangleBuffer = new ComputeBuffer(maxTriangleCount, Marshal.SizeOf<Triangle>(), ComputeBufferType.Append);
             _triCountBuffer = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
+            // Ensures that correct values are read from the buffer
+            _triangleBuffer.SetCounterValue(0);
         }
 
         // NOTE: not a MonoBehaviour, so this will need to be called by the owning behaviour

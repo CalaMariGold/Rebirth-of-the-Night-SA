@@ -14,12 +14,13 @@ namespace Rebirth.Terrain.Chunk
     /// </summary>
     public class ChunkManager : MonoBehaviour
     {
+        public event Action<Vector3Int> ChunkLoaded;
+        public event Action<Vector3Int> ChunkUnloaded;
+        
         [SerializeField] private Transform _chunkLoadingTarget;
         [SerializeField] private int _chunkSize;
         [SerializeField] private int _chunkLoadDistance;
         
-        // Currently loaded chunks
-        private Dictionary<Vector3Int, IChunk> _loadedChunks;
         // Which chunks are we waiting for load
         private HashSet<Vector3Int> _loadingChunks;
         // Freshly loaded chunks to be consumed by the main thread into _loadedChunks on update
@@ -34,6 +35,13 @@ namespace Rebirth.Terrain.Chunk
         private IVoxelProvider _voxelProvider;
         // Provides a token used to cancel the asynchronous load task
         private CancellationTokenSource _tokenSource;
+        
+        /// <summary>
+        /// Gets the currently loaded chunks.
+        /// </summary>
+        public Dictionary<Vector3Int, IChunk> LoadedChunks { get; private set; }
+
+        public int ChunkSize => _chunkSize;
 
         /// <summary>
         /// Set up the Chunk Manager by dependency injection.
@@ -53,7 +61,7 @@ namespace Rebirth.Terrain.Chunk
         private void Awake()
         {
             // Create required objects and collections for Async chunk loads
-            _loadedChunks = new Dictionary<Vector3Int, IChunk>();
+            LoadedChunks = new Dictionary<Vector3Int, IChunk>();
             _loadingChunks = new HashSet<Vector3Int>();
             _freshChunks = new ConcurrentQueue<(Vector3Int, IChunk)>();
             _chunksToLoad = new BlockingCollection<Vector3Int>(new ConcurrentQueue<Vector3Int>());
@@ -127,8 +135,9 @@ namespace Rebirth.Terrain.Chunk
         {
             while (_freshChunks.TryDequeue(out var data))
             {
-                _loadedChunks.Add(data.Item1, data.Item2);
+                LoadedChunks.Add(data.Item1, data.Item2);
                 _loadingChunks.Remove(data.Item1);
+                ChunkLoaded?.Invoke(data.Item1);
             }
         }
 
@@ -159,19 +168,20 @@ namespace Rebirth.Terrain.Chunk
             }
             
             // Recycle old loaded chunk memory we no longer need
-            foreach (var chunkPos in _loadedChunks.Keys.Except(chunksToLoad).ToArray())
+            foreach (var chunkPos in LoadedChunks.Keys.Except(chunksToLoad).ToArray())
             {
-                var chunk = _loadedChunks[chunkPos];
-                _loadedChunks.Remove(chunkPos);
+                var chunk = LoadedChunks[chunkPos];
+                LoadedChunks.Remove(chunkPos);
                 // Only recycle if the chunk size hasn't changed
                 if (chunk.Width == _chunkSize)
                 {
                     _recyclableChunks.Add(chunk);
                 }
+                ChunkUnloaded?.Invoke(chunkPos);
             }
             
             // Add chunks we still need to load to the load queue
-            foreach (var chunkPos in chunksToLoad.Except(_loadedChunks.Keys).Except(_loadingChunks).ToArray())
+            foreach (var chunkPos in chunksToLoad.Except(LoadedChunks.Keys).Except(_loadingChunks).ToArray())
             {
                 _loadingChunks.Add(chunkPos);
                 _chunksToLoad.Add(chunkPos);
@@ -180,13 +190,13 @@ namespace Rebirth.Terrain.Chunk
 
         private void OnDrawGizmos()
         {
-            if (_loadedChunks == null)
+            if (LoadedChunks == null)
             {
                 return;
             }
             Gizmos.color = Color.red;
             // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-            foreach (var chunkCoord in _loadedChunks)
+            foreach (var chunkCoord in LoadedChunks)
             {
                 var worldSpaceCoord = (chunkCoord.Key + new Vector3(0.5f, 0.5f, 0.5f)) * _chunkSize;
                 Gizmos.DrawWireCube(worldSpaceCoord, Vector3.one * _chunkSize);
