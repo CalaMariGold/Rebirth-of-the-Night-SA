@@ -8,6 +8,7 @@ namespace Rebirth.Terrain.Voxel
     public class UnityPerlinVoxelProvider : IVoxelProvider
     {
         private readonly Vector2 _frequency;
+        private readonly Vector2 _offset;
         private readonly float _amplitude;
         private readonly float _baseHeight;
 
@@ -17,8 +18,10 @@ namespace Rebirth.Terrain.Voxel
         /// <param name="baseHeight">The base ground height of the terrain.</param>
         /// <param name="amplitude">The amplitude of the Perlin Noise.</param>
         /// <param name="frequency">The 2D frequency of the Perlin Noise.</param>
-        public UnityPerlinVoxelProvider(float baseHeight, float amplitude, Vector2 frequency)
+        /// <param name="offset">The 2D offset of the Perlin Noise.</param>
+        public UnityPerlinVoxelProvider(float baseHeight, float amplitude, Vector2 frequency, Vector2 offset = default)
         {
+            _offset = offset;
             _baseHeight = baseHeight;
             _amplitude = amplitude;
             _frequency = frequency;
@@ -29,8 +32,11 @@ namespace Rebirth.Terrain.Voxel
             return new VoxelInfo
             {
                 Distance = y - _baseHeight - (
-                    _amplitude * Mathf.PerlinNoise(x * _frequency.x, z * _frequency.y)
+                    _amplitude * Mathf.PerlinNoise(
+                        x * _frequency.x + _offset.x,
+                        z * _frequency.y + _offset.y
                     )
+                )
             };
         }
     }

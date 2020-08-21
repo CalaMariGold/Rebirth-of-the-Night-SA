@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Rebirth.Terrain.Chunk;
 using UnityEngine;
@@ -43,15 +42,31 @@ namespace Rebirth.Terrain.Meshing
         {
             // Handle chunk load & unload events from _chunkManager
             // TODO: maybe run mesh generation async to avoid lag?
-            _chunkManager.ChunkLoaded += LoadChunkMesh;
+            _chunkManager.ChunkLoaded += OnChunkLoaded;
             _chunkManager.ChunkUnloaded += UnloadChunkMesh;
         }
 
         public void OnDisable()
         {
             // Remove event handlers
-            _chunkManager.ChunkLoaded -= LoadChunkMesh;
+            _chunkManager.ChunkLoaded -= OnChunkLoaded;
             _chunkManager.ChunkUnloaded -= UnloadChunkMesh;
+        }
+
+        /// <summary>
+        /// Handle the ChunkLoaded event by loading chunk meshes.
+        /// </summary>
+        /// <param name="chunkLocation">The location of the loaded chunk.</param>
+        private void OnChunkLoaded(Vector3Int chunkLocation)
+        {
+            // This is really slow, and should be sped up with a queue
+            // to prevent duplicate reloading
+            for (var i = 0; i < 8; i++)
+            {
+                var offset = new Vector3Int(i & 1, (i >> 1) & 1, (i >> 2) & 1);
+                UnloadChunkMesh(chunkLocation - offset);
+                LoadChunkMesh(chunkLocation - offset);
+            }
         }
 
         /// <summary>
@@ -65,14 +80,17 @@ namespace Rebirth.Terrain.Meshing
                 // No valid mesh generator
                 return;
             }
-            if (!_chunkManager.LoadedChunks.TryGetValue(chunkLocation, out var chunk))
+            if (!_chunkManager.LoadedChunks.ContainsKey(chunkLocation))
             {
                 // Chunk could not be found
                 return;
             }
-
-            // TODO: mesh chunk borders
-            var mesh = _meshGenerator.GenerateMesh(chunk, _computeShader);
+            
+            var mesh = _meshGenerator.GenerateMesh(
+                chunkLocation,
+                _chunkManager.LoadedChunks,
+                _computeShader
+            );
             mesh.RecalculateNormals();
             var holderName = $"Chunk {chunkLocation.x}, {chunkLocation.y}, {chunkLocation.z}";
             ChunkHolder chunkHolder;

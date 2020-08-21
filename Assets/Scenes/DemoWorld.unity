@@ -415,6 +415,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _chunkSize: 16
+  _offset: {x: 1000, y: 1000}
 --- !u!114 &813522798
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -505,8 +506,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalRotation: {x: 0.30102417, y: 0.20666485, z: -0.066998936, w: 0.92853934}
+  m_LocalPosition: {x: -19.00361, y: 48.43198, z: -64.70166}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}

@@ -10,13 +10,17 @@ namespace Rebirth.Terrain.Behaviours
     public class SimpleTerrainManager : MonoBehaviour
     {
         [SerializeField] private int _chunkSize;
+        [SerializeField] private Vector2 _offset;
         private ChunkManager _chunkManager;
         private MeshManager _meshManager;
 
         public void Awake()
         {
             _chunkManager = GetComponent<ChunkManager>();
-            _chunkManager.Setup(ChunkFactory, new UnityPerlinVoxelProvider(0, 5, Vector2.one * 0.1f));
+            _chunkManager.Setup(
+                ChunkFactory,
+                new UnityPerlinVoxelProvider(0, 5, Vector2.one * 0.1f, _offset)
+            );
             _meshManager = GetComponent<MeshManager>();
             _meshManager.Setup(new MarchingCubes());
         }

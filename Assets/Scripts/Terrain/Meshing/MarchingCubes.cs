@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Rebirth.Terrain.Chunk;
@@ -17,16 +18,21 @@ namespace Rebirth.Terrain.Meshing
         private ComputeBuffer _triCountBuffer;
 
         /// <summary>
-        /// Generates a mesh using an implementation of Marching Cubes with a compute shader.
+        /// Generates a mesh from the data in an <seealso cref="IChunk"/>.
         /// </summary>
-        /// <param name="chunk">The chunk to generate a mesh from.</param>
+        /// <param name="chunkLocation">The location of the chunk to mesh.</param>
+        /// <param name="chunks">The loaded chunks to use in mesh generation.</param>
         /// <param name="computeShader">The compute shader to use when generating the mesh.</param>
-        /// <returns>A Mesh which can be added to a scene.</returns>
+        /// <returns>A Unity mesh which can be added to a scene.</returns>
         /// <remarks>Based on Sebastian Lague's compute shader implementation.</remarks>
-        public Mesh GenerateMesh(IChunk chunk, ComputeShader computeShader)
+        public Mesh GenerateMesh(Vector3Int chunkLocation,
+            IDictionary<Vector3Int, IChunk> chunks,
+            ComputeShader computeShader)
         {
+            // Do we need to check if chunkLocation is in chunks?
+            var chunk = chunks[chunkLocation];
             CreateBuffers(chunk);
-            var mesh = CreateChunkMesh(chunk, computeShader);
+            var mesh = CreateChunkMesh(chunkLocation, chunks, computeShader);
             ReleaseBuffers();
             return mesh;
         }
@@ -35,25 +41,30 @@ namespace Rebirth.Terrain.Meshing
         /// Helper method for generating a Mesh via Marching Cubes algorithm.
         /// Fills buffers, executes compute shader, and returns result.
         /// </summary>
-        /// <param name="chunk">The chunk to generate a mesh from.</param>
+        /// <param name="chunkLocation">The location of the chunk to mesh.</param>
+        /// <param name="chunks">The loaded chunks to use in mesh generation.</param>
         /// <param name="computeShader">The compute shader to use when generating the mesh.</param>
-        /// <returns>A Mesh which can be added to a scene.</returns>
-        private Mesh CreateChunkMesh(IChunk chunk, ComputeShader computeShader)
+        /// <returns>A Unity mesh which can be added to a scene.</returns>
+        private Mesh CreateChunkMesh(Vector3Int chunkLocation,
+            IDictionary<Vector3Int, IChunk> chunks,
+            ComputeShader computeShader)
         {
+            var chunk = chunks[chunkLocation];
             // Fill buffers
             computeShader.SetBuffer(0, "chunkPoints", _pointBuffer);
             computeShader.SetBuffer(0, "triangles", _triangleBuffer);
-            _pointBuffer.SetData(chunk.CalcDistanceArray());
+            
+            _pointBuffer.SetData(CalcDistanceArray(chunkLocation, chunks));
 
             // Update shader params
-            computeShader.SetInt("chunkWidth", chunk.Width);
-            computeShader.SetInt("chunkHeight", chunk.Height);
-            computeShader.SetInt("chunkDepth", chunk.Depth);
+            computeShader.SetInt("chunkWidth", chunk.Width + 1);
+            computeShader.SetInt("chunkHeight", chunk.Height + 1);
+            computeShader.SetInt("chunkDepth", chunk.Depth + 1);
 
             // Determine number of thread groups to use for each axis
-            var numThreadGroupsX = Mathf.CeilToInt(chunk.Width / (float) _threadGroupSize);
-            var numThreadGroupsY = Mathf.CeilToInt(chunk.Height / (float) _threadGroupSize);
-            var numThreadGroupsZ = Mathf.CeilToInt(chunk.Depth / (float) _threadGroupSize);
+            var numThreadGroupsX = Mathf.CeilToInt(chunk.Width + 1 / (float) _threadGroupSize);
+            var numThreadGroupsY = Mathf.CeilToInt(chunk.Height + 1 / (float) _threadGroupSize);
+            var numThreadGroupsZ = Mathf.CeilToInt(chunk.Depth + 1 / (float) _threadGroupSize);
 
             // Dispatch
             computeShader.Dispatch(0, numThreadGroupsX, numThreadGroupsY, numThreadGroupsZ);
@@ -89,12 +100,84 @@ namespace Rebirth.Terrain.Meshing
         }
 
         /// <summary>
+        /// Provides a 1-D array containing the voxel Distance data in the chunk's 3-D data array.
+        /// Indexing is determined with the following mapping:
+        /// <code><![CDATA[
+        ///    index(x, y, z) = z * (width + height) + y * height + x
+        /// ]]></code>
+        /// where (x, y, z) are local data array indices.
+        /// </summary>
+        /// <param name="chunkLocation">The location of the chunk.</param>
+        /// <param name="chunks">The loaded chunks.</param>
+        /// <returns>The 1-D array holding the compute data.</returns>
+        private static VoxelComputeInfo[] CalcDistanceArray(Vector3Int chunkLocation,
+            IDictionary<Vector3Int, IChunk> chunks)
+        {
+            // Initial chunk
+            var chunk = chunks[chunkLocation];
+            var width = chunk.Width + 1;
+            var height = chunk.Height + 1;
+            var depth = chunk.Depth + 1;
+            var computeInfo = new VoxelComputeInfo[width * height * depth];
+            // NOTE: IEnumerable used because it should be cheaper than indexed access on an octree.
+            foreach (var item in chunk)
+            {
+                var index = item.Key.z * width * height + item.Key.y * width + item.Key.x;
+                computeInfo[index] = item.Value.ToCompute();
+            }
+
+            // Side faces, edges, corner
+            // NOTE: This whole section is very janky and could do with a refactor
+            var otherChunks = new[] {
+                new Vector3Int(1, 0, 0),
+                new Vector3Int(0, 1, 0),
+                new Vector3Int(0,0, 1),
+                new Vector3Int(1, 1, 0),
+                new Vector3Int(0, 1, 1),
+                new Vector3Int(1, 0, 1),
+                new Vector3Int(1,1, 1) 
+            };
+            
+            foreach (var otherChunkVector in otherChunks)
+            {
+                var otherLocation = chunkLocation + otherChunkVector;
+                var found = chunks.TryGetValue(otherLocation, out var otherChunk);
+                for (var x = 0; x <= (chunk.Width - 1) * (1 - otherChunkVector.x); x++)
+                {
+                    for (var y = 0; y <= (chunk.Height - 1) * (1 - otherChunkVector.y); y++)
+                    {
+                        for (var z = 0; z <= (chunk.Depth - 1) * (1 - otherChunkVector.z); z++)
+                        {
+                            var index = ((otherChunkVector.z * chunk.Width + z) * width * height) +
+                                        ((otherChunkVector.y * chunk.Height + y) * width) +
+                                        (otherChunkVector.x * chunk.Depth + x);
+                            if (found)
+                            {
+                                computeInfo[index] = otherChunk[x, y, z].ToCompute();
+                            }
+                            else
+                            {
+                                // TODO: use a better default?
+                                computeInfo[index] = new VoxelComputeInfo
+                                {
+                                    Distance = 1.0f
+                                };
+                            }
+                            
+                        }
+                    }
+                }
+            }
+            return computeInfo;
+        }
+
+        /// <summary>
         /// Creates compute buffers necessary for Marching Cubes algorithm.
         /// </summary>
         /// <param name="chunk">The chunk to generate a mesh from.</param>
         private void CreateBuffers(IChunk chunk)
         {
-            var numVoxels = chunk.Width * chunk.Height * chunk.Depth;
+            var numVoxels = (chunk.Width + 1) * (chunk.Height + 1) * (chunk.Depth + 1);
             var maxTriangleCount = numVoxels * 5;
             
             ReleaseBuffers(); // Ensure previous buffers are released

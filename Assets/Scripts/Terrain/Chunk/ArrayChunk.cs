@@ -94,34 +94,6 @@ namespace Rebirth.Terrain.Chunk
             }
         }
 
-        /// <summary>
-        /// Returns a 1-D array containing the voxel Distance data in the chunk's 3-D data array.
-        /// Indexing is determined with the following mapping:
-        /// <code><![CDATA[
-        ///    index(x, y, z) = z << (chunkWidthBits + chunkHeightBits) | y << chunkWidthBits | x
-        /// ]]></code>
-        /// where (x, y, z) are local data array indices.
-        /// </summary>
-        public VoxelComputeInfo[] CalcDistanceArray()
-        {
-            var chunkWidthBits  = (int) Mathf.Log(Width - 1, 2) + 1;
-            var chunkHeightBits  = (int) Mathf.Log(Height - 1, 2) + 1;
-            var chunkData = new VoxelComputeInfo[Width * Height * Depth];
-
-            for (var x = 0; x < Width; x++)
-            {
-                for (var y = 0; y < Height; y++)
-                {
-                    for (var z = 0; z < Depth; z++)
-                    {
-                        var index = z << (chunkWidthBits + chunkHeightBits) | y << chunkWidthBits | x;
-                        chunkData[index] = _voxelData[x, y, z].ToCompute();
-                    }
-                }
-            }
-            return chunkData;
-        }
-
         public IEnumerator<KeyValuePair<Vector3Int, VoxelInfo>> GetEnumerator()
         {
             for (var x = 0; x < Width; x++)

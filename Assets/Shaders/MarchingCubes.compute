@@ -48,7 +48,8 @@ float3 interpolateVerts(float voxelA, float voxelB, int3 coordinateA, int3 coord
 ///
 int indexFromCoord(int x, int y, int z)
 {
-    return z << (chunkWidthBits + chunkHeightBits) | y << chunkWidthBits | x;
+    // return z << (chunkWidthBits + chunkHeightBits) | y << chunkWidthBits | x;
+    return z * chunkWidth * chunkHeight + y * chunkWidth + x;
 }
 
 ///
