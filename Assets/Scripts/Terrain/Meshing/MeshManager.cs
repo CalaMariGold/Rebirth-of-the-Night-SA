@@ -12,8 +12,19 @@ namespace Rebirth.Terrain.Meshing
         [SerializeField] private Material _material;
         private IMeshGenerator _meshGenerator;
         private ChunkManager _chunkManager;
-        private readonly Dictionary<Vector3Int, GameObject> _meshHolders =
-            new Dictionary<Vector3Int, GameObject>();
+        private readonly Dictionary<Vector3Int, ChunkHolder> _meshHolders =
+            new Dictionary<Vector3Int, ChunkHolder>();
+        private readonly Queue<ChunkHolder> _recyclableChunks = new Queue<ChunkHolder>();
+
+        /// <summary>
+        /// Represents a <seealso cref="GameObject"/> holding a chunk mesh.
+        /// </summary>
+        private struct ChunkHolder
+        {
+            public GameObject GameObject { get; set; }
+            public MeshFilter MeshFilter { get; set; }
+        }
+        
         /// <summary>
         /// Inject dependencies for the class.
         /// </summary>
@@ -63,16 +74,31 @@ namespace Rebirth.Terrain.Meshing
             // TODO: mesh chunk borders
             var mesh = _meshGenerator.GenerateMesh(chunk, _computeShader);
             mesh.RecalculateNormals();
-            var meshHolder = new GameObject(
-                $"Chunk {chunkLocation.x}, {chunkLocation.y}, {chunkLocation.z}"
-            );
-            meshHolder.transform.position = chunkLocation * _chunkManager.ChunkSize;
-            meshHolder.transform.parent = transform;
-            var meshFilter = meshHolder.AddComponent<MeshFilter>();
-            meshFilter.sharedMesh = mesh;
-            var meshRenderer = meshHolder.AddComponent<MeshRenderer>();
-            meshRenderer.sharedMaterial = _material;
-            _meshHolders.Add(chunkLocation, meshHolder);
+            var holderName = $"Chunk {chunkLocation.x}, {chunkLocation.y}, {chunkLocation.z}";
+            ChunkHolder chunkHolder;
+            if (_recyclableChunks.Count > 0)
+            {
+                // Recycle a GameObject
+                chunkHolder = _recyclableChunks.Dequeue();
+                chunkHolder.GameObject.name = holderName;
+            }
+            else
+            {
+                // Create new GameObject to hold the chunk
+                var chunkHolderGameObject = new GameObject(holderName);
+                var meshFilter = chunkHolderGameObject.AddComponent<MeshFilter>();
+                var meshRenderer = chunkHolderGameObject.AddComponent<MeshRenderer>();
+                chunkHolderGameObject.transform.parent = transform;
+                meshRenderer.sharedMaterial = _material;
+                chunkHolder = new ChunkHolder
+                {
+                    GameObject = chunkHolderGameObject,
+                    MeshFilter = meshFilter
+                };
+            }
+            chunkHolder.GameObject.transform.position = chunkLocation * _chunkManager.ChunkSize;
+            chunkHolder.MeshFilter.sharedMesh = mesh;
+            _meshHolders.Add(chunkLocation, chunkHolder);
         }
 
         /// <summary>
@@ -87,8 +113,11 @@ namespace Rebirth.Terrain.Meshing
                 return;
             }
             _meshHolders.Remove(chunkLocation);
-            // TODO: add unloaded GameObject to recyclable queue
-            Destroy(chunkHolder);
+            // Recycle the chunk
+            // TODO: Provide method to cleanup recycled chunks to save memory
+            chunkHolder.MeshFilter.mesh = null;
+            chunkHolder.GameObject.name = "recyclable_chunk";
+            _recyclableChunks.Enqueue(chunkHolder);
         }
     }
 }
