@@ -1,5 +1,8 @@
+using System.Collections;
+using System.Collections.Generic;
 using Rebirth.Terrain.Octree;
 using Rebirth.Terrain.Voxel;
+using UnityEngine;
 
 namespace Rebirth.Terrain.Chunk
 {
@@ -100,6 +103,16 @@ namespace Rebirth.Terrain.Chunk
                 }
             }
             return chunkData;
+        }
+
+        public IEnumerator<KeyValuePair<Vector3Int, VoxelInfo>> GetEnumerator()
+        {
+            return _voxelData.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

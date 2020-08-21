@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using Rebirth.Terrain.Voxel;
 using UnityEngine;
 
@@ -118,6 +120,28 @@ namespace Rebirth.Terrain.Chunk
                 }
             }
             return chunkData;
+        }
+
+        public IEnumerator<KeyValuePair<Vector3Int, VoxelInfo>> GetEnumerator()
+        {
+            for (var x = 0; x < Width; x++)
+            {
+                for (var y = 0; y < Height; y++)
+                {
+                    for (var z = 0; z < Depth; z++)
+                    {
+                        yield return new KeyValuePair<Vector3Int, VoxelInfo>(
+                            new Vector3Int(x, y, z),
+                            _voxelData[x, y, z]
+                        );
+                    }
+                }
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

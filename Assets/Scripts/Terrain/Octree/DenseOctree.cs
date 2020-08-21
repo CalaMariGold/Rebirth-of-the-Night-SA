@@ -1,4 +1,7 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace Rebirth.Terrain.Octree
 {
@@ -6,7 +9,7 @@ namespace Rebirth.Terrain.Octree
     /// Represents data in 3 dimensions using a Dense Octree.
     /// </summary>
     /// <typeparam name="T">The type of the data being stored.</typeparam>
-    public class DenseOctree<T>
+    public class DenseOctree<T> : IEnumerable<KeyValuePair<Vector3Int, T>>
     {
         private T _value;
         private readonly DenseOctree<T>[] _nodes = new DenseOctree<T>[8];
@@ -33,6 +36,7 @@ namespace Rebirth.Terrain.Octree
         /// Gets a byte which encodes which nodes have been modified using binary flags.
         /// </summary>
         public byte Dirty { get; private set; }
+        
         /// <summary>
         /// Gets the number of subdivisions in the octree.
         /// </summary>
@@ -101,5 +105,44 @@ namespace Rebirth.Terrain.Octree
             index = index << 1 | ((z >> (Subdivisions - 1)) & 1);
             return index;
         }
+
+        #region IEnumerable Implementation
+
+        public IEnumerator<KeyValuePair<Vector3Int, T>> GetEnumerator()
+        {
+            if (Subdivisions == 0)
+            {
+                yield return new KeyValuePair<Vector3Int, T>(Vector3Int.zero, _value);
+                yield break;
+            }
+
+            for (var i = 0; i < 8; i++)
+            {
+                var coord = GetCoordinateByIndex(i);
+                foreach (var item in _nodes[i])
+                {
+                    yield return new KeyValuePair<Vector3Int, T>(
+                        coord + item.Key,
+                        _value
+                    );
+                }
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+        
+        private Vector3Int GetCoordinateByIndex(int index)
+        {
+            return new Vector3Int(
+                ((index >> 2) & 1) << (Subdivisions - 1),
+                ((index >> 1) & 1) << (Subdivisions - 1),
+                (index & 1) << (Subdivisions - 1)
+            );
+        }
+
+        #endregion
     }
 }

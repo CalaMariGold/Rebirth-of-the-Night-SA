@@ -1,11 +1,13 @@
+using System.Collections.Generic;
 using Rebirth.Terrain.Voxel;
+using UnityEngine;
 
 namespace Rebirth.Terrain.Chunk
 {
     /// <summary>
     /// Represents a chunk of voxels in space.
     /// </summary>
-    public interface IChunk
+    public interface IChunk : IEnumerable<KeyValuePair<Vector3Int, VoxelInfo>>
     {
         /// <summary>
         /// Gets the <see cref="VoxelInfo"/> for the voxel at a given location
