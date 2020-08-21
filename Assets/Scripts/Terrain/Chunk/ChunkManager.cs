@@ -188,7 +188,7 @@ namespace Rebirth.Terrain.Chunk
             }
         }
 
-        private void OnDrawGizmos()
+        private void OnDrawGizmosSelected()
         {
             if (LoadedChunks == null)
             {
