@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using Rebirth.Terrain.Octree;
 using Rebirth.Terrain.Voxel;
 using UnityEngine;
@@ -76,6 +78,53 @@ namespace Rebirth.Terrain.Chunk
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Serializes a chunk to a stream.
+        /// </summary>
+        /// <param name="writer">An object used to write to the stream.</param>
+        public void Serialize(BinaryWriter writer)
+        {
+            writer.Write(GetType().Name);
+            writer.Write(_voxelData.Subdivisions);
+            _voxelData.Serialize(writer, info =>
+            {
+                writer.Write(info.Distance);
+                writer.Write(info.VoxelType?.Id ?? -1);
+            });
+        }
+
+        /// <summary>
+        /// Deserializes a chunk from a stream.
+        /// </summary>
+        /// <param name="reader">An object used to read from the stream.</param>
+        /// <param name="voxelTypeProvider">A delegate to look up voxel types by ID.</param>
+        /// <returns><c>true</c> if the chunk could be deserialized; otherwise, <c>false</c>.</returns>
+        public bool Deserialize(BinaryReader reader, Func<int, IVoxelType> voxelTypeProvider)
+        {
+            if (reader.ReadString() != GetType().Name)
+            {
+                return false;
+            }
+
+            if (reader.ReadInt32() != _voxelData.Subdivisions)
+            {
+                return false;
+            }
+            
+            _voxelData.Deserialize(reader, () =>
+            {
+                var distance = reader.ReadSingle();
+                var voxelTypeId = reader.ReadInt32();
+                var voxelType = voxelTypeId != -1 ? voxelTypeProvider(voxelTypeId) : null;
+                return new VoxelInfo
+                {
+                    Distance = distance,
+                    VoxelType = voxelType
+                };
+            });
+            return true;
         }
 
         public IEnumerator<KeyValuePair<Vector3Int, VoxelInfo>> GetEnumerator()

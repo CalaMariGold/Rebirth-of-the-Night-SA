@@ -386,7 +386,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _chunkLoadingTarget: {fileID: 1210321432}
-  _chunkSize: 16
+  _chunkSize: 32
   _chunkLoadDistance: 3
 --- !u!4 &813522796
 Transform:
@@ -414,7 +414,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 534e97f8b8bb40e6aa42388c64b44f19, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _chunkSize: 16
+  _chunkSize: 32
   _offset: {x: 1000, y: 1000}
 --- !u!114 &813522798
 MonoBehaviour:

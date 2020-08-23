@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using Rebirth.Terrain.Voxel;
 using UnityEngine;
 
@@ -92,6 +94,69 @@ namespace Rebirth.Terrain.Chunk
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Serializes a chunk to a stream.
+        /// </summary>
+        /// <param name="writer">An object used to write to the stream.</param>
+        public void Serialize(BinaryWriter writer)
+        {
+            writer.Write(GetType().Name);
+            writer.Write(Width);
+            writer.Write(Height);
+            writer.Write(Depth);
+            for (var x = 0; x < Width; x++)
+            {
+                for (var y = 0; y < Height; y++)
+                {
+                    for (var z = 0; z < Depth; z++)
+                    {
+                        var item = _voxelData[x, y, z];
+                        writer.Write(item.Distance);
+                        writer.Write(item.VoxelType?.Id ?? -1);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Deserializes a chunk from a stream.
+        /// </summary>
+        /// <param name="reader">An object used to read from the stream.</param>
+        /// <param name="voxelTypeProvider">A delegate to look up voxel types by ID.</param>
+        /// <returns><c>true</c> if the chunk could be deserialized; otherwise, <c>false</c>.</returns>
+        public bool Deserialize(BinaryReader reader, Func<int, IVoxelType> voxelTypeProvider)
+        {
+            if (reader.ReadString() != GetType().Name)
+            {
+                return false;
+            }
+
+            if (reader.ReadInt32() != Width || reader.ReadInt32() != Height || reader.ReadInt32() != Depth)
+            {
+                return false;
+            }
+        
+            for (var x = 0; x < Width; x++)
+            {
+                for (var y = 0; y < Height; y++)
+                {
+                    for (var z = 0; z < Depth; z++)
+                    {
+                        var distance = reader.ReadSingle();
+                        var voxelTypeId = reader.ReadInt32();
+                        var voxelType = voxelTypeId != -1 ? voxelTypeProvider(voxelTypeId) : null;
+                        _voxelData[x, y, z] = new VoxelInfo
+                        {
+                            Distance = distance,
+                            VoxelType = voxelType
+                        };
+                    }
+                }
+            }
+
+            return true;
         }
 
         public IEnumerator<KeyValuePair<Vector3Int, VoxelInfo>> GetEnumerator()

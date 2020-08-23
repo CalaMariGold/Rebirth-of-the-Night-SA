@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 namespace Rebirth.Terrain.Octree
@@ -105,7 +106,7 @@ namespace Rebirth.Terrain.Octree
             index = index << 1 | ((z >> (Subdivisions - 1)) & 1);
             return index;
         }
-
+        
         #region IEnumerable Implementation
 
         public IEnumerator<KeyValuePair<Vector3Int, T>> GetEnumerator()
@@ -143,6 +144,56 @@ namespace Rebirth.Terrain.Octree
             );
         }
 
+        #endregion
+        
+        #region Serialization
+        
+        /// <summary>
+        /// Write the modified data in the Octree to a stream.
+        /// </summary>
+        /// <param name="writer">An object used to write to the stream.</param>
+        /// <param name="serializeValue">A delegate to serialize a value in the octree.</param>
+        public void Serialize(BinaryWriter writer, Action<T> serializeValue)
+        {
+            if (Subdivisions == 0)
+            {
+                serializeValue(_value);
+                return;
+            }
+            writer.Write(Dirty);
+            for (var i = 0; i < 8; i++)
+            {
+                if (((Dirty >> i) & 1) == 0)
+                {
+                    continue;
+                }
+                _nodes[i].Serialize(writer, serializeValue);
+            }
+        }
+
+        /// <summary>
+        /// Read data from a stream into the Octree.
+        /// </summary>
+        /// <param name="reader">An object used to read from the stream.</param>
+        /// <param name="deserializeValue">A delegate to deserialize a value from the stream.</param>
+        public void Deserialize(BinaryReader reader, Func<T> deserializeValue)
+        {
+            if (Subdivisions == 0)
+            {
+                _value = deserializeValue();
+                return;
+            }
+            Dirty = reader.ReadByte();
+            for (var i = 0; i < 8; i++)
+            {
+                if (((Dirty >> i) & 1) == 0)
+                {
+                    continue;
+                }
+                _nodes[i].Deserialize(reader, deserializeValue);
+            }
+        }
+        
         #endregion
     }
 }
