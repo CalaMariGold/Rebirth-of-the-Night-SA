@@ -31,8 +31,8 @@ namespace Rebirth.Terrain.Chunk
         private ConcurrentBag<IChunk> _recyclableChunks;
         // Chunk creation function for DI
         private Func<int, int, int, IChunk> _chunkFactory;
-        // Voxel provider for DI
-        private IVoxelProvider _voxelProvider;
+        // Chunk loader for DI
+        private IChunkLoader _chunkLoader;
         // Provides a token used to cancel the asynchronous load task
         private CancellationTokenSource _tokenSource;
         
@@ -49,13 +49,13 @@ namespace Rebirth.Terrain.Chunk
         /// <param name="chunkFactory">
         /// A function which produces an <see cref="IChunk"/> for a given location.
         /// </param>
-        /// <param name="voxelProvider">
-        /// An <see cref="IVoxelProvider"/> which will be used to fill chunks.
+        /// <param name="chunkLoader">
+        /// An <see cref="IChunkLoader"/> which will be used to fill chunks.
         /// </param>
-        public void Setup(Func<int, int, int, IChunk> chunkFactory, IVoxelProvider voxelProvider)
+        public void Setup(Func<int, int, int, IChunk> chunkFactory, IChunkLoader chunkLoader)
         {
             _chunkFactory = chunkFactory;
-            _voxelProvider = voxelProvider;
+            _chunkLoader = chunkLoader;
         }
 
         private void Awake()
@@ -89,7 +89,7 @@ namespace Rebirth.Terrain.Chunk
         /// <remarks>This action will be run asynchronously.</remarks>
         private void LoadChunks(CancellationToken ct)
         {
-            if (_chunkFactory == null || _voxelProvider == null)
+            if (_chunkFactory == null || _chunkLoader == null)
             {
                 return;
             }
@@ -117,7 +117,7 @@ namespace Rebirth.Terrain.Chunk
                 {
                     chunk = _chunkFactory(offset.x, offset.y, offset.z);
                 }
-                chunk.Load(_voxelProvider);
+                _chunkLoader.Load(chunk);
                 _freshChunks.Enqueue((chunkToLoad, chunk));
             }
         }

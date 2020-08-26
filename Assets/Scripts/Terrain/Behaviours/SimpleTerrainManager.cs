@@ -17,9 +17,12 @@ namespace Rebirth.Terrain.Behaviours
         public void Awake()
         {
             _chunkManager = GetComponent<ChunkManager>();
+            var voxelProvider = new UnityPerlinVoxelProvider(
+                0, 5, Vector2.one * 0.1f, _offset
+            );
             _chunkManager.Setup(
                 ChunkFactory,
-                new UnityPerlinVoxelProvider(0, 5, Vector2.one * 0.1f, _offset)
+                new VoxelChunkLoader(voxelProvider)
             );
             _meshManager = GetComponent<MeshManager>();
             _meshManager.Setup(new MarchingCubes());

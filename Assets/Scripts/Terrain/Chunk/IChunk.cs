@@ -53,11 +53,7 @@ namespace Rebirth.Terrain.Chunk
         /// <param name="voxelProvider">The object which provides voxel info.</param>
         /// <remarks>
         /// I'm not totally happy with this current architecture for loading chunks.
-        /// I think for it to be properly extensible, it will make sense to have another interface
-        /// which manages all forms of chunk loading e.g. <c>IChunkLoader</c>. This way there will be a
-        /// unified interface for loading from files, procedural generation etc. so that the
-        /// <see cref="ChunkManager"/> can remain decoupled from the chunk loading implementation.
-        /// TODO: Create a unified interface for chunk data loading.
+        /// We may need a method to set voxels from an <seealso cref="IChunkLoader"/> keeping the data clean.
         /// </remarks>
         void Load(IVoxelProvider voxelProvider);
 
