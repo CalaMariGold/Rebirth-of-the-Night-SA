@@ -147,21 +147,47 @@ namespace Rebirth.Terrain.Chunk
         {
             var chunksToLoad = new HashSet<Vector3Int>();
             var currentChunk = Vector3Int.FloorToInt(_chunkLoadingTarget.position / _chunkSize);
-            // Get the set of chunks we want loaded this frame
-            for (var x = -_chunkLoadDistance; x <= _chunkLoadDistance; x++)
+
+            // Gets list of chunks to be loaded this frame from the center, out
+            for (var n = 0; n < _chunkLoadDistance; n++)
             {
-                for (var y = -_chunkLoadDistance; y <= _chunkLoadDistance; y++)
+                // Loop through wall coordinates of cuboid with edge length 2n+1
+                for (var i = 0; i <= n; i++)
                 {
-                    for (var z = -_chunkLoadDistance; z <= _chunkLoadDistance; z++)
+                    for (var j = 0; j <= n; j++)
                     {
-                        var coord = new Vector3Int(x, y, z);
-                        // Ignore chunks outside rendering sphere
-                        if (coord.magnitude > _chunkLoadDistance)
+                        //Verifies that chunk is within sphere
+                        if (Mathf.Sqrt(i * i + j * j + n * n) > _chunkLoadDistance)
                         {
-                            continue;
+                            break;
                         }
 
-                        chunksToLoad.Add(coord + currentChunk);
+                        // Loop through positive and negative combinations of i and j
+                        for (var k = 0; k <= 3; k ++) {
+                            var iMod = k & 2;
+                            iMod -= 1;
+                            iMod *= i;
+
+                            var jMod = (k << 1) & 2;
+                            jMod -= 1;
+                            jMod *= j;
+
+                            // Places (i,j) coordinates on each wall of cuboid -- There may be a better way to do this
+                            var coords = new[]
+                            {
+                                new Vector3Int(-n, iMod, jMod),
+                                new Vector3Int(iMod, -n, jMod),
+                                new Vector3Int(iMod, jMod, -n),
+                                new Vector3Int(n, iMod, jMod),
+                                new Vector3Int(iMod, n, jMod),
+                                new Vector3Int(iMod, jMod, n)
+                            };
+
+                            foreach (var coord in coords.Distinct())
+                            {
+                                chunksToLoad.Add(coord + currentChunk);
+                            }
+                        }
                     }
                 }
             }

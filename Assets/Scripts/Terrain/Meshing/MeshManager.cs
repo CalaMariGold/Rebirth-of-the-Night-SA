@@ -48,21 +48,8 @@ namespace Rebirth.Terrain.Meshing
 
         public void Update()
         {
-            // HACK: Mesh at most one chunk loaded this frame
-            if (_meshingQueue.Count == 0)
-            {
-                return;
-            }
-
-            var chunkToMesh = _meshingQueue.Dequeue();
-            _chunksToMesh.Remove(chunkToMesh);
-            if (!LoadChunkMesh(chunkToMesh, out var mesh))
-            {
-                return;
-            }
-
-            UnloadChunkMesh(chunkToMesh);
-            CreateMeshedObject(chunkToMesh, mesh);
+            var meshesThisFrame = Mathf.CeilToInt(_meshingQueue.Count * Time.deltaTime);
+            MeshChunks(meshesThisFrame);
         }
 
         public void OnEnable()
@@ -79,6 +66,38 @@ namespace Rebirth.Terrain.Meshing
             _chunkManager.ChunkUnloaded -= UnloadChunkMesh;
         }
 
+
+        /// <summary>
+        /// Meshes and loads queued chunks.
+        /// </summary>
+        /// <param name="chunkCount">Number of chunks to mesh.</param>
+        private void MeshChunks(int chunkCount)
+        {
+            chunkCount = System.Math.Min(chunkCount, _meshingQueue.Count);
+
+            for (var i = 0; i < chunkCount; i++)
+            {
+                var chunkToMesh = _meshingQueue.Dequeue();
+                _chunksToMesh.Remove(chunkToMesh);
+
+                Mesh mesh;
+                if (_recyclableChunks.Count > 0)
+                {
+                    mesh = _recyclableChunks.Peek().MeshFilter.sharedMesh;
+                }
+                else
+                {
+                    mesh = null;
+                }
+
+                if (LoadChunkMesh(chunkToMesh, ref mesh))
+                {
+                    UnloadChunkMesh(chunkToMesh);
+                    CreateMeshedObject(chunkToMesh, mesh);
+                }
+            }
+        }
+    
         /// <summary>
         /// Handle the ChunkLoaded event.
         /// </summary>
@@ -126,9 +145,9 @@ namespace Rebirth.Terrain.Meshing
                     GameObject = chunkHolderGameObject,
                     MeshFilter = meshFilter
                 };
+                chunkHolder.MeshFilter.sharedMesh = mesh;
             }
             chunkHolder.GameObject.transform.position = chunkLocation * _chunkManager.ChunkSize;
-            chunkHolder.MeshFilter.sharedMesh = mesh;
             _meshHolders.Add(chunkLocation, chunkHolder);
         }
 
@@ -138,7 +157,7 @@ namespace Rebirth.Terrain.Meshing
         /// <param name="chunkLocation">The location of the chunk.</param>
         /// <param name="mesh">The mesh to load.</param>
         /// <returns><c>true</c> if the mesh could be loaded; otherwise, <c>false</c>.</returns>
-        private bool LoadChunkMesh(Vector3Int chunkLocation, out Mesh mesh)
+        private bool LoadChunkMesh(Vector3Int chunkLocation, ref Mesh mesh)
         {
             if (_meshGenerator == null || _computeShader == null)
             {
@@ -154,10 +173,11 @@ namespace Rebirth.Terrain.Meshing
                 return false;
             }
 
-            mesh = _meshGenerator.GenerateMesh(
+            _meshGenerator.GenerateMesh(
                 chunkLocation,
                 _chunkManager.LoadedChunks,
-                _computeShader
+                _computeShader,
+                ref mesh
             );
             mesh.RecalculateNormals();
             return true;
@@ -177,7 +197,7 @@ namespace Rebirth.Terrain.Meshing
             _meshHolders.Remove(chunkLocation);
             // Recycle the chunk
             // TODO: Provide method to cleanup recycled chunks to save memory
-            chunkHolder.MeshFilter.mesh = null;
+            chunkHolder.MeshFilter.sharedMesh.Clear();
             chunkHolder.GameObject.name = "recyclable_chunk";
             _recyclableChunks.Enqueue(chunkHolder);
         }

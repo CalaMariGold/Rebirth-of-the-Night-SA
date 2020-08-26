@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Rebirth.Terrain.Chunk;
@@ -105,9 +104,12 @@ namespace Rebirth.Terrain.Behaviours
                 _meshHolder = new GameObject("Chunk Mesh");
                 _meshHolder.transform.SetParent(transform);
                 var meshFilter = _meshHolder.AddComponent<MeshFilter>();
-                meshFilter.sharedMesh = _meshGenerator.GenerateMesh(
-                    Vector3Int.zero, _chunkDictionary, _computeShader
+                Mesh mesh = null;
+                _meshGenerator.GenerateMesh(
+                    Vector3Int.zero, _chunkDictionary, _computeShader,
+                    ref mesh
                 );
+                meshFilter.sharedMesh = mesh;
                 meshFilter.sharedMesh.RecalculateNormals();
                 var meshRenderer = _meshHolder.AddComponent<MeshRenderer>();
                 meshRenderer.sharedMaterial = _material;
@@ -115,8 +117,10 @@ namespace Rebirth.Terrain.Behaviours
             else
             {
                 var meshFilter = _meshHolder.GetComponent<MeshFilter>();
-                meshFilter.sharedMesh = _meshGenerator.GenerateMesh(
-                    Vector3Int.zero, _chunkDictionary, _computeShader
+                var mesh = meshFilter.sharedMesh;
+                _meshGenerator.GenerateMesh(
+                    Vector3Int.zero, _chunkDictionary, _computeShader,
+                    ref mesh
                 );
                 meshFilter.sharedMesh.RecalculateNormals();
             }

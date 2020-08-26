@@ -25,16 +25,16 @@ namespace Rebirth.Terrain.Meshing
         /// <param name="computeShader">The compute shader to use when generating the mesh.</param>
         /// <returns>A Unity mesh which can be added to a scene.</returns>
         /// <remarks>Based on Sebastian Lague's compute shader implementation.</remarks>
-        public Mesh GenerateMesh(Vector3Int chunkLocation,
+        public void GenerateMesh(Vector3Int chunkLocation,
             IDictionary<Vector3Int, IChunk> chunks,
-            ComputeShader computeShader)
+            ComputeShader computeShader,
+            ref Mesh mesh)
         {
             // Do we need to check if chunkLocation is in chunks?
             var chunk = chunks[chunkLocation];
             CreateBuffers(chunk);
-            var mesh = CreateChunkMesh(chunkLocation, chunks, computeShader);
+            CreateChunkMesh(chunkLocation, chunks, computeShader, ref mesh);
             ReleaseBuffers();
-            return mesh;
         }
 
         /// <summary>
@@ -45,9 +45,10 @@ namespace Rebirth.Terrain.Meshing
         /// <param name="chunks">The loaded chunks to use in mesh generation.</param>
         /// <param name="computeShader">The compute shader to use when generating the mesh.</param>
         /// <returns>A Unity mesh which can be added to a scene.</returns>
-        private Mesh CreateChunkMesh(Vector3Int chunkLocation,
+        private void CreateChunkMesh(Vector3Int chunkLocation,
             IDictionary<Vector3Int, IChunk> chunks,
-            ComputeShader computeShader)
+            ComputeShader computeShader,
+            ref Mesh mesh)
         {
             var chunk = chunks[chunkLocation];
             // Fill buffers
@@ -91,12 +92,20 @@ namespace Rebirth.Terrain.Meshing
                 }
             }
 
-            return new Mesh
+            if(mesh != null)
             {
-                vertices = vertices,
-                colors = colours,
-                triangles = Enumerable.Range(0, vertices.Length).ToArray()
-            };
+                mesh.vertices = vertices;
+                mesh.colors = colours;
+                mesh.triangles = Enumerable.Range(0, vertices.Length).ToArray();
+            } else
+            {
+                mesh = new Mesh()
+                {
+                    vertices = vertices,
+                    colors = colours,
+                    triangles = Enumerable.Range(0, vertices.Length).ToArray()
+                };
+            } 
         }
 
         /// <summary>
@@ -128,18 +137,13 @@ namespace Rebirth.Terrain.Meshing
 
             // Side faces, edges, corner
             // NOTE: This whole section is very janky and could do with a refactor
-            var otherChunks = new[] {
-                new Vector3Int(1, 0, 0),
-                new Vector3Int(0, 1, 0),
-                new Vector3Int(0,0, 1),
-                new Vector3Int(1, 1, 0),
-                new Vector3Int(0, 1, 1),
-                new Vector3Int(1, 0, 1),
-                new Vector3Int(1,1, 1) 
-            };
-            
-            foreach (var otherChunkVector in otherChunks)
+            for (var i = 1; i <= 7; i++)
             {
+                var otherChunkVector = new Vector3Int(
+                    i & 1,
+                    (i >> 1) & 1,
+                    (i >> 2) & 1);
+
                 var otherLocation = chunkLocation + otherChunkVector;
                 var found = chunks.TryGetValue(otherLocation, out var otherChunk);
                 for (var x = 0; x <= (chunk.Width - 1) * (1 - otherChunkVector.x); x++)
@@ -163,11 +167,11 @@ namespace Rebirth.Terrain.Meshing
                                     Distance = 1.0f
                                 };
                             }
-                            
                         }
                     }
                 }
             }
+
             return computeInfo;
         }
 
