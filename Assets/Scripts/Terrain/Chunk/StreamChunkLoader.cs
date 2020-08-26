@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 using Rebirth.Terrain.Voxel;
+using UnityEngine;
 
 namespace Rebirth.Terrain.Chunk
 {
@@ -35,7 +36,11 @@ namespace Rebirth.Terrain.Chunk
         /// <param name="chunk">The chunk to fill.</param>
         public void Load(IChunk chunk)
         {
-            chunk.Deserialize(_reader, _voxelTypeProvider);
+            if (!chunk.Deserialize(_reader, _voxelTypeProvider))
+            {
+                // NOTE: a more helpful warning message here would be useful
+                Debug.LogWarning("Chunk could not be deserialized.");
+            }
         }
         
         public void Dispose()
