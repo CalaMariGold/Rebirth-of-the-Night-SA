@@ -18,8 +18,21 @@ namespace Rebirth.Terrain.Chunk
         
         [SerializeField] private Transform _chunkLoadingTarget;
         [SerializeField] private int _chunkSize;
-        [SerializeField] private int _chunkLoadDistance;
-        
+
+        // HACK: exists to expose _chunkLoadDistance to editor
+        [SerializeField] private int _newChunkLoadDistance;
+
+        private int _chunkLoadDistance;
+
+        public int ChunkLoadDistance
+        {
+            get { return _chunkLoadDistance; }
+            set { SetChunkLoadDistance(value); }
+        }
+
+        // Set of all offset vectors that correlate to _chunkLoadDistance
+        private List<Vector3Int> _chunkLoadingOffsets;
+
         // Which chunks are we waiting for load
         private HashSet<Vector3Int> _loadingChunks;
         // Freshly loaded chunks to be consumed by the main thread into _loadedChunks on update
@@ -61,6 +74,7 @@ namespace Rebirth.Terrain.Chunk
         {
             // Create required objects and collections for Async chunk loads
             LoadedChunks = new Dictionary<Vector3Int, IChunk>();
+            _chunkLoadingOffsets = new List<Vector3Int>();
             _loadingChunks = new HashSet<Vector3Int>();
             _freshChunks = new ConcurrentQueue<(Vector3Int, IChunk)>();
             _chunksToLoad = new BlockingCollection<Vector3Int>(new ConcurrentQueue<Vector3Int>());
@@ -148,48 +162,13 @@ namespace Rebirth.Terrain.Chunk
             var chunksToLoad = new HashSet<Vector3Int>();
             var currentChunk = Vector3Int.FloorToInt(_chunkLoadingTarget.position / _chunkSize);
 
+            // HACK: Allows setting chunk load distance from editor
+            ChunkLoadDistance = _newChunkLoadDistance;
+
             // Gets list of chunks to be loaded this frame from the center, out
-            for (var n = 0; n < _chunkLoadDistance; n++)
+            foreach ( var offset in _chunkLoadingOffsets)
             {
-                // Loop through wall coordinates of cuboid with edge length 2n+1
-                for (var i = 0; i <= n; i++)
-                {
-                    for (var j = 0; j <= n; j++)
-                    {
-                        //Verifies that chunk is within sphere
-                        if (Mathf.Sqrt(i * i + j * j + n * n) > _chunkLoadDistance)
-                        {
-                            break;
-                        }
-
-                        // Loop through positive and negative combinations of i and j
-                        for (var k = 0; k <= 3; k ++) {
-                            var iMod = k & 2;
-                            iMod -= 1;
-                            iMod *= i;
-
-                            var jMod = (k << 1) & 2;
-                            jMod -= 1;
-                            jMod *= j;
-
-                            // Places (i,j) coordinates on each wall of cuboid -- There may be a better way to do this
-                            var coords = new[]
-                            {
-                                new Vector3Int(-n, iMod, jMod),
-                                new Vector3Int(iMod, -n, jMod),
-                                new Vector3Int(iMod, jMod, -n),
-                                new Vector3Int(n, iMod, jMod),
-                                new Vector3Int(iMod, n, jMod),
-                                new Vector3Int(iMod, jMod, n)
-                            };
-
-                            foreach (var coord in coords.Distinct())
-                            {
-                                chunksToLoad.Add(coord + currentChunk);
-                            }
-                        }
-                    }
-                }
+                chunksToLoad.Add(currentChunk + offset);
             }
             
             // Recycle old loaded chunk memory we no longer need
@@ -211,6 +190,54 @@ namespace Rebirth.Terrain.Chunk
                 _loadingChunks.Add(chunkPos);
                 _chunksToLoad.Add(chunkPos);
             }
+        }
+
+        /// <summary>
+        /// Sets chunkload distance, populates _chunkLoadingOffsets and _chunkPreloadingOffsets.
+        /// </summary>
+        private void SetChunkLoadDistance(int value)
+        {
+            if(value == _chunkLoadDistance || value < 0)
+            {
+                return;
+            } else if (value < _chunkLoadDistance) {
+                _chunkLoadingOffsets.RemoveAll(a => a.magnitude >= value);
+                _chunkLoadDistance = value;
+                return;
+            }
+
+            _chunkLoadingOffsets.Clear();
+
+            var bound = value - 1;
+            
+            //Scans all chunks in cuboid of edge length 2n+1
+            for (var x = -bound; x <= bound; x++)
+            {
+                for (var y = -bound; y <= bound; y++)
+                {
+                    //Verifies that chunk is within circle
+                    if (Mathf.Sqrt(x * x + y * y) > value)
+                    {
+                        continue;
+                    }
+
+                    for (var z = -bound; z <= bound; z++)
+                    {
+                        //Verifies that chunk is within sphere
+                        if (Mathf.Sqrt(x * x + y * y + z * z) > value)
+                        {
+                            continue;
+                        }
+
+                        _chunkLoadingOffsets.Add(new Vector3Int(x, y, z));
+                    }
+                }
+            }
+
+            // Sorts by distance from center
+            _chunkLoadingOffsets.Sort((a, b) => a.magnitude.CompareTo(b.magnitude));
+
+            _chunkLoadDistance = value;
         }
 
         private void OnDrawGizmosSelected()
