@@ -48,7 +48,7 @@ namespace Rebirth.Terrain.Meshing
 
         public void Update()
         {
-            var meshesThisFrame = Mathf.CeilToInt(_meshingQueue.Count * Time.deltaTime);
+            var meshesThisFrame = Mathf.CeilToInt(_meshingQueue.Count * Time.deltaTime / 2);
             MeshChunks(meshesThisFrame);
         }
 
@@ -78,6 +78,27 @@ namespace Rebirth.Terrain.Meshing
             for (var i = 0; i < chunkCount; i++)
             {
                 var chunkToMesh = _meshingQueue.Dequeue();
+                var hasEdgeChunks = true;
+
+                // Ensures that chunks necessary for meshing are present 
+                for (var j = 0; j < 8; j++)
+                {
+                    var offset = new Vector3Int((j & 1), ((j >> 1) & 1), ((j >> 2) & 1));
+                    var chunk = chunkToMesh + offset;
+
+                    if(!_chunkManager.LoadedChunks.ContainsKey(chunk))
+                    {
+                        hasEdgeChunks = false;
+                        break;
+                    }
+                }
+
+                if(!hasEdgeChunks)
+                {
+                    _meshingQueue.Enqueue(chunkToMesh);
+                    continue;
+                }
+
                 _chunksToMesh.Remove(chunkToMesh);
 
                 Mesh mesh;
@@ -105,14 +126,9 @@ namespace Rebirth.Terrain.Meshing
         private void OnChunkLoaded(Vector3Int chunkLocation)
         {
             // Mesh chunk by location
-            for (var i = 0; i < 8; i++)
+            if (_chunksToMesh.Add(chunkLocation))
             {
-                var offset = new Vector3Int(i & 1, (i >> 1) & 1, (i >> 2) & 1);
-                // So apparently, we can only call compute shaders from the main thread :'(
-                if (_chunksToMesh.Add(chunkLocation - offset))
-                {
-                    _meshingQueue.Enqueue(chunkLocation - offset);
-                }
+                _meshingQueue.Enqueue(chunkLocation);
             }
         }
 
