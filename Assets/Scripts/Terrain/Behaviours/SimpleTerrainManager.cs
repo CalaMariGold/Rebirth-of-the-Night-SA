@@ -7,12 +7,12 @@ namespace Rebirth.Terrain.Behaviours
 {
     [RequireComponent(typeof(ChunkManager))]
     [RequireComponent(typeof(MeshManager))]
-    public class SimpleTerrainManager : MonoBehaviour
+    public class SimpleTerrainManager : MonoBehaviour, IChunkLoader
     {
         [SerializeField] private int _chunkSize;
         [SerializeField] private Vector2 _offset;
         private ChunkManager _chunkManager;
-        private MeshManager _meshManager;
+        private IChunkLoader _chunkLoader;
 
         public void Awake()
         {
@@ -20,12 +20,12 @@ namespace Rebirth.Terrain.Behaviours
             var voxelProvider = new UnityPerlinVoxelProvider(
                 0, 5, Vector2.one * 0.1f, _offset
             );
+            _chunkLoader = new VoxelChunkLoader(voxelProvider);
+            // This should be improved using the component system,
+            // to avoid circular dependencies
             _chunkManager.Setup(
-                ChunkFactory,
-                new VoxelChunkLoader(voxelProvider)
+                ChunkFactory
             );
-            _meshManager = GetComponent<MeshManager>();
-            _meshManager.Setup(new MarchingCubes());
         }
 
         private IChunk ChunkFactory(int x, int y, int z)
@@ -34,6 +34,11 @@ namespace Rebirth.Terrain.Behaviours
                 _chunkSize, _chunkSize, _chunkSize,
                 x, y, z
             );
+        }
+
+        public void Load(IChunk chunk)
+        {
+            _chunkLoader.Load(chunk);
         }
     }
 }

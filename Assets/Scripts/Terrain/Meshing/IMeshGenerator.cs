@@ -14,8 +14,9 @@ namespace Rebirth.Terrain.Meshing
         /// </summary>
         /// <param name="chunkLocation">The location of the chunk to mesh.</param>
         /// <param name="chunks">The loaded chunks to use in mesh generation.</param>
-        /// <param name="computeShader">The compute shader to use when generating the mesh.</param>
-        /// <returns>A Unity mesh which can be added to a scene.</returns>
-        void GenerateMesh(Vector3Int chunkLocation, IDictionary<Vector3Int, IChunk> chunks, ComputeShader computeShader, ref Mesh mesh);
+        /// <param name="mesh">The Unity mesh which can be added to a scene.</param>
+        void GenerateMesh(Vector3Int chunkLocation,
+            IDictionary<Vector3Int, IChunk> chunks,
+            ref Mesh mesh);
     }
 }

@@ -7,7 +7,6 @@ namespace Rebirth.Terrain.Meshing
     [RequireComponent(typeof(ChunkManager))]
     public class MeshManager : MonoBehaviour
     {
-        [SerializeField] private ComputeShader _computeShader;
         [SerializeField] private Material _material;
         
         // Mesh Generator for DI
@@ -31,19 +30,11 @@ namespace Rebirth.Terrain.Meshing
             public GameObject GameObject { get; set; }
             public MeshFilter MeshFilter { get; set; }
         }
-        
-        /// <summary>
-        /// Inject dependencies for the class.
-        /// </summary>
-        /// <param name="meshGenerator">An object to generate meshes for chunks.</param>
-        public void Setup(IMeshGenerator meshGenerator)
-        {
-            _meshGenerator = meshGenerator;
-        }
-        
+
         public void Awake()
         {
             _chunkManager = GetComponent<ChunkManager>();
+            _meshGenerator = GetComponent<IMeshGenerator>();
         }
 
         public void Update()
@@ -175,7 +166,7 @@ namespace Rebirth.Terrain.Meshing
         /// <returns><c>true</c> if the mesh could be loaded; otherwise, <c>false</c>.</returns>
         private bool LoadChunkMesh(Vector3Int chunkLocation, ref Mesh mesh)
         {
-            if (_meshGenerator == null || _computeShader == null)
+            if (_meshGenerator == null)
             {
                 // No valid mesh generator
                 mesh = default;
@@ -192,7 +183,6 @@ namespace Rebirth.Terrain.Meshing
             _meshGenerator.GenerateMesh(
                 chunkLocation,
                 _chunkManager.LoadedChunks,
-                _computeShader,
                 ref mesh
             );
             mesh.RecalculateNormals();

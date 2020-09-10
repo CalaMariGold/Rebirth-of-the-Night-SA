@@ -10,8 +10,10 @@ namespace Rebirth.Terrain.Meshing
     /// <summary>
     /// Provides Unity meshes for voxel chunks using the Marching Cubes algorithm.
     /// </summary>
-    public class MarchingCubes : IMeshGenerator
+    public class MarchingCubes : MonoBehaviour, IMeshGenerator
     {
+        [SerializeField] private ComputeShader _computeShader;
+        
         private const int _threadGroupSize = 8;
         private ComputeBuffer _pointBuffer;
         private ComputeBuffer _triangleBuffer;
@@ -22,18 +24,16 @@ namespace Rebirth.Terrain.Meshing
         /// </summary>
         /// <param name="chunkLocation">The location of the chunk to mesh.</param>
         /// <param name="chunks">The loaded chunks to use in mesh generation.</param>
-        /// <param name="computeShader">The compute shader to use when generating the mesh.</param>
-        /// <returns>A Unity mesh which can be added to a scene.</returns>
+        /// <param name="mesh">A Unity mesh which can be added to a scene.</param>
         /// <remarks>Based on Sebastian Lague's compute shader implementation.</remarks>
         public void GenerateMesh(Vector3Int chunkLocation,
             IDictionary<Vector3Int, IChunk> chunks,
-            ComputeShader computeShader,
             ref Mesh mesh)
         {
             // Do we need to check if chunkLocation is in chunks?
             var chunk = chunks[chunkLocation];
             CreateBuffers(chunk);
-            CreateChunkMesh(chunkLocation, chunks, computeShader, ref mesh);
+            CreateChunkMesh(chunkLocation, chunks, _computeShader, ref mesh);
             ReleaseBuffers();
         }
 
@@ -44,7 +44,7 @@ namespace Rebirth.Terrain.Meshing
         /// <param name="chunkLocation">The location of the chunk to mesh.</param>
         /// <param name="chunks">The loaded chunks to use in mesh generation.</param>
         /// <param name="computeShader">The compute shader to use when generating the mesh.</param>
-        /// <returns>A Unity mesh which can be added to a scene.</returns>
+        /// <param name="mesh">The Unity mesh which can be added to a scene.</param>
         private void CreateChunkMesh(Vector3Int chunkLocation,
             IDictionary<Vector3Int, IChunk> chunks,
             ComputeShader computeShader,
@@ -192,8 +192,7 @@ namespace Rebirth.Terrain.Meshing
             // Ensures that correct values are read from the buffer
             _triangleBuffer.SetCounterValue(0);
         }
-
-        // NOTE: not a MonoBehaviour, so this will need to be called by the owning behaviour
+        
         public void OnDestroy()
         {
             if (Application.isPlaying)

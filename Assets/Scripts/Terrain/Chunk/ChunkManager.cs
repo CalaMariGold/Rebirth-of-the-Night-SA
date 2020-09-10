@@ -26,8 +26,8 @@ namespace Rebirth.Terrain.Chunk
 
         public int ChunkLoadDistance
         {
-            get { return _chunkLoadDistance; }
-            set { SetChunkLoadDistance(value); }
+            get => _chunkLoadDistance;
+            set => SetChunkLoadDistance(value);
         }
 
         // Set of all offset vectors that correlate to _chunkLoadDistance
@@ -61,13 +61,10 @@ namespace Rebirth.Terrain.Chunk
         /// <param name="chunkFactory">
         /// A function which produces an <see cref="IChunk"/> for a given location.
         /// </param>
-        /// <param name="chunkLoader">
-        /// An <see cref="IChunkLoader"/> which will be used to fill chunks.
-        /// </param>
-        public void Setup(Func<int, int, int, IChunk> chunkFactory, IChunkLoader chunkLoader)
+        public void Setup(Func<int, int, int, IChunk> chunkFactory)
         {
+            // TODO: replace with component-based system
             _chunkFactory = chunkFactory;
-            _chunkLoader = chunkLoader;
         }
 
         private void Awake()
@@ -79,6 +76,8 @@ namespace Rebirth.Terrain.Chunk
             _freshChunks = new ConcurrentQueue<(Vector3Int, IChunk)>();
             _chunksToLoad = new BlockingCollection<Vector3Int>(new ConcurrentQueue<Vector3Int>());
             _recyclableChunks = new ConcurrentBag<IChunk>();
+            // Get required components
+            _chunkLoader = GetComponent<IChunkLoader>();
         }
 
         private void OnEnable()
