@@ -8,30 +8,21 @@ namespace Rebirth.Terrain.Meshing
     public class MeshManager : MonoBehaviour
     {
         [SerializeField] private ComputeShader _computeShader;
-        [SerializeField] private Material _material;
+        [SerializeField] private GameObject _chunkPrefab;
         
         // Mesh Generator for DI
         private IMeshGenerator _meshGenerator;
         // The Chunk Manager component
         private ChunkManager _chunkManager;
         // Currently loaded chunk GameObjects
-        private readonly Dictionary<Vector3Int, ChunkHolder> _meshHolders =
-            new Dictionary<Vector3Int, ChunkHolder>();
+        private readonly Dictionary<Vector3Int, MeshHolder> _meshHolders =
+            new Dictionary<Vector3Int, MeshHolder>();
         // GameObjects which we can reuse for new chunks
-        private readonly Queue<ChunkHolder> _recyclableChunks = new Queue<ChunkHolder>();
+        private readonly Queue<MeshHolder> _recyclableChunks = new Queue<MeshHolder>();
         // Chunks which still need to be meshed
         private readonly HashSet<Vector3Int> _chunksToMesh = new HashSet<Vector3Int>();
         private readonly Queue<Vector3Int> _meshingQueue = new Queue<Vector3Int>();
-        
-        /// <summary>
-        /// Represents a <seealso cref="GameObject"/> holding a chunk mesh.
-        /// </summary>
-        private struct ChunkHolder
-        {
-            public GameObject GameObject { get; set; }
-            public MeshFilter MeshFilter { get; set; }
-        }
-        
+
         /// <summary>
         /// Inject dependencies for the class.
         /// </summary>
@@ -106,30 +97,31 @@ namespace Rebirth.Terrain.Meshing
         {
 
             var holderName = $"Chunk {chunkLocation.x}, {chunkLocation.y}, {chunkLocation.z}";
-            ChunkHolder chunkHolder;
+            MeshHolder meshHolder;
+            var position = chunkLocation * _chunkManager.ChunkSize;
             if (_recyclableChunks.Count > 0)
             {
                 // Recycle a GameObject
-                chunkHolder = _recyclableChunks.Dequeue();
-                chunkHolder.GameObject.name = holderName;
+                meshHolder = _recyclableChunks.Dequeue();
+                meshHolder.gameObject.name = holderName;
+                meshHolder.transform.position = position;
             }
             else
             {
                 // Create new GameObject to hold the chunk
-                var chunkHolderGameObject = new GameObject(holderName);
-                var meshFilter = chunkHolderGameObject.AddComponent<MeshFilter>();
-                var meshRenderer = chunkHolderGameObject.AddComponent<MeshRenderer>();
-                chunkHolderGameObject.transform.parent = transform;
-                meshRenderer.sharedMaterial = _material;
-                chunkHolder = new ChunkHolder
-                {
-                    GameObject = chunkHolderGameObject,
-                    MeshFilter = meshFilter
-                };
+                // var chunkHolderGameObject = new GameObject(holderName);
+                // var meshFilter = chunkHolderGameObject.AddComponent<MeshFilter>();
+                // var meshRenderer = chunkHolderGameObject.AddComponent<MeshRenderer>();
+                var chunkHolderGameObject = Instantiate(
+                    _chunkPrefab, position,
+                    Quaternion.identity, transform
+                );
+                chunkHolderGameObject.name = holderName;
+                meshHolder = chunkHolderGameObject.GetComponent<MeshHolder>();
             }
-            chunkHolder.GameObject.transform.position = chunkLocation * _chunkManager.ChunkSize;
-            chunkHolder.MeshFilter.sharedMesh = mesh;
-            _meshHolders.Add(chunkLocation, chunkHolder);
+
+            meshHolder.Mesh = mesh;
+            _meshHolders.Add(chunkLocation, meshHolder);
         }
 
         /// <summary>
@@ -177,8 +169,8 @@ namespace Rebirth.Terrain.Meshing
             _meshHolders.Remove(chunkLocation);
             // Recycle the chunk
             // TODO: Provide method to cleanup recycled chunks to save memory
-            chunkHolder.MeshFilter.mesh = null;
-            chunkHolder.GameObject.name = "recyclable_chunk";
+            chunkHolder.Mesh.Clear();
+            chunkHolder.gameObject.name = "recyclable_chunk";
             _recyclableChunks.Enqueue(chunkHolder);
         }
     }
