@@ -59,6 +59,22 @@ namespace Rebirth.Player
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """"
+                },
+                {
+                    ""name"": ""Raise Terrain"",
+                    ""type"": ""Button"",
+                    ""id"": ""c2521131-8147-4c5c-8fc5-c1dd4726c60e"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
+                },
+                {
+                    ""name"": ""Dig Terrain"",
+                    ""type"": ""Button"",
+                    ""id"": ""32bc64bd-2c2f-41f8-9fa6-4ac212f6b74b"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
                 }
             ],
             ""bindings"": [
@@ -160,6 +176,28 @@ namespace Rebirth.Player
                     ""action"": ""Jump"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""6873c12b-87c5-4dcc-8414-6be0ccda8485"",
+                    ""path"": ""<Mouse>/rightButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Raise Terrain"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""8ebea706-2456-4d5f-bd36-fae95ec0cd17"",
+                    ""path"": ""<Mouse>/leftButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Dig Terrain"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -173,6 +211,8 @@ namespace Rebirth.Player
             m_Default_Crouch = m_Default.FindAction("Crouch", throwIfNotFound: true);
             m_Default_Sprint = m_Default.FindAction("Sprint", throwIfNotFound: true);
             m_Default_Jump = m_Default.FindAction("Jump", throwIfNotFound: true);
+            m_Default_RaiseTerrain = m_Default.FindAction("Raise Terrain", throwIfNotFound: true);
+            m_Default_DigTerrain = m_Default.FindAction("Dig Terrain", throwIfNotFound: true);
         }
 
         public void Dispose()
@@ -227,6 +267,8 @@ namespace Rebirth.Player
         private readonly InputAction m_Default_Crouch;
         private readonly InputAction m_Default_Sprint;
         private readonly InputAction m_Default_Jump;
+        private readonly InputAction m_Default_RaiseTerrain;
+        private readonly InputAction m_Default_DigTerrain;
         public struct DefaultActions
         {
             private @PlayerControls m_Wrapper;
@@ -236,6 +278,8 @@ namespace Rebirth.Player
             public InputAction @Crouch => m_Wrapper.m_Default_Crouch;
             public InputAction @Sprint => m_Wrapper.m_Default_Sprint;
             public InputAction @Jump => m_Wrapper.m_Default_Jump;
+            public InputAction @RaiseTerrain => m_Wrapper.m_Default_RaiseTerrain;
+            public InputAction @DigTerrain => m_Wrapper.m_Default_DigTerrain;
             public InputActionMap Get() { return m_Wrapper.m_Default; }
             public void Enable() { Get().Enable(); }
             public void Disable() { Get().Disable(); }
@@ -260,6 +304,12 @@ namespace Rebirth.Player
                     @Jump.started -= m_Wrapper.m_DefaultActionsCallbackInterface.OnJump;
                     @Jump.performed -= m_Wrapper.m_DefaultActionsCallbackInterface.OnJump;
                     @Jump.canceled -= m_Wrapper.m_DefaultActionsCallbackInterface.OnJump;
+                    @RaiseTerrain.started -= m_Wrapper.m_DefaultActionsCallbackInterface.OnRaiseTerrain;
+                    @RaiseTerrain.performed -= m_Wrapper.m_DefaultActionsCallbackInterface.OnRaiseTerrain;
+                    @RaiseTerrain.canceled -= m_Wrapper.m_DefaultActionsCallbackInterface.OnRaiseTerrain;
+                    @DigTerrain.started -= m_Wrapper.m_DefaultActionsCallbackInterface.OnDigTerrain;
+                    @DigTerrain.performed -= m_Wrapper.m_DefaultActionsCallbackInterface.OnDigTerrain;
+                    @DigTerrain.canceled -= m_Wrapper.m_DefaultActionsCallbackInterface.OnDigTerrain;
                 }
                 m_Wrapper.m_DefaultActionsCallbackInterface = instance;
                 if (instance != null)
@@ -279,6 +329,12 @@ namespace Rebirth.Player
                     @Jump.started += instance.OnJump;
                     @Jump.performed += instance.OnJump;
                     @Jump.canceled += instance.OnJump;
+                    @RaiseTerrain.started += instance.OnRaiseTerrain;
+                    @RaiseTerrain.performed += instance.OnRaiseTerrain;
+                    @RaiseTerrain.canceled += instance.OnRaiseTerrain;
+                    @DigTerrain.started += instance.OnDigTerrain;
+                    @DigTerrain.performed += instance.OnDigTerrain;
+                    @DigTerrain.canceled += instance.OnDigTerrain;
                 }
             }
         }
@@ -290,6 +346,8 @@ namespace Rebirth.Player
             void OnCrouch(InputAction.CallbackContext context);
             void OnSprint(InputAction.CallbackContext context);
             void OnJump(InputAction.CallbackContext context);
+            void OnRaiseTerrain(InputAction.CallbackContext context);
+            void OnDigTerrain(InputAction.CallbackContext context);
         }
     }
 }
