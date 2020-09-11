@@ -19,6 +19,17 @@ namespace Rebirth.Terrain.Meshing
         private ComputeBuffer _triangleBuffer;
         private ComputeBuffer _triCountBuffer;
 
+        // Offsets for a chunk's neighbors, required for meshing edges
+        private List<Vector3Int> _chunkNeighborOffsets = new List<Vector3Int>();
+
+        public void Awake()
+        {
+            for (var i = 0; i < 8; i++)
+            {
+                _chunkNeighborOffsets.Add(new Vector3Int((i & 1), ((i >> 1) & 1), ((i >> 2) & 1)));
+            }
+        }
+
         /// <summary>
         /// Generates a mesh from the data in an <seealso cref="IChunk"/>.
         /// </summary>
@@ -119,7 +130,7 @@ namespace Rebirth.Terrain.Meshing
         /// <param name="chunkLocation">The location of the chunk.</param>
         /// <param name="chunks">The loaded chunks.</param>
         /// <returns>The 1-D array holding the compute data.</returns>
-        private static VoxelComputeInfo[] CalcDistanceArray(Vector3Int chunkLocation,
+        private VoxelComputeInfo[] CalcDistanceArray(Vector3Int chunkLocation,
             IDictionary<Vector3Int, IChunk> chunks)
         {
             // Initial chunk
@@ -137,15 +148,12 @@ namespace Rebirth.Terrain.Meshing
 
             // Side faces, edges, corner
             // NOTE: This whole section is very janky and could do with a refactor
-            for (var i = 1; i <= 7; i++)
+            for (var i = 1; i < 8; i++)
             {
-                var otherChunkVector = new Vector3Int(
-                    i & 1,
-                    (i >> 1) & 1,
-                    (i >> 2) & 1);
-
+                var otherChunkVector = _chunkNeighborOffsets[i];
                 var otherLocation = chunkLocation + otherChunkVector;
                 var found = chunks.TryGetValue(otherLocation, out var otherChunk);
+
                 for (var x = 0; x <= (chunk.Width - 1) * (1 - otherChunkVector.x); x++)
                 {
                     for (var y = 0; y <= (chunk.Height - 1) * (1 - otherChunkVector.y); y++)

@@ -5,22 +5,30 @@ using UnityEngine;
 namespace Rebirth.Terrain.Meshing
 {
     [RequireComponent(typeof(ChunkManager))]
+    [RequireComponent(typeof(IMeshGenerator))]
     public class MeshManager : MonoBehaviour
     {
         [SerializeField] private Material _material;
         
         // Mesh Generator for DI
         private IMeshGenerator _meshGenerator;
+
         // The Chunk Manager component
         private ChunkManager _chunkManager;
+
         // Currently loaded chunk GameObjects
         private readonly Dictionary<Vector3Int, ChunkHolder> _meshHolders =
             new Dictionary<Vector3Int, ChunkHolder>();
+
         // GameObjects which we can reuse for new chunks
         private readonly Queue<ChunkHolder> _recyclableChunks = new Queue<ChunkHolder>();
+
         // Chunks which still need to be meshed
         private readonly HashSet<Vector3Int> _chunksToMesh = new HashSet<Vector3Int>();
         private readonly Queue<Vector3Int> _meshingQueue = new Queue<Vector3Int>();
+
+        // Offsets for a chunk's neighbors, required for meshing edges
+        private List<Vector3Int> _chunkNeighborOffsets = new List<Vector3Int>();
         
         /// <summary>
         /// Represents a <seealso cref="GameObject"/> holding a chunk mesh.
@@ -35,6 +43,10 @@ namespace Rebirth.Terrain.Meshing
         {
             _chunkManager = GetComponent<ChunkManager>();
             _meshGenerator = GetComponent<IMeshGenerator>();
+            for (var i = 0; i < 8; i++)
+            {
+                _chunkNeighborOffsets.Add(new Vector3Int((i & 1), ((i >> 1) & 1), ((i >> 2) & 1)));
+            }
         }
 
         public void Update()
@@ -57,7 +69,6 @@ namespace Rebirth.Terrain.Meshing
             _chunkManager.ChunkUnloaded -= UnloadChunkMesh;
         }
 
-
         /// <summary>
         /// Meshes and loads queued chunks.
         /// </summary>
@@ -74,17 +85,14 @@ namespace Rebirth.Terrain.Meshing
                 // Ensures that chunks necessary for meshing are present 
                 for (var j = 0; j < 8; j++)
                 {
-                    var offset = new Vector3Int((j & 1), ((j >> 1) & 1), ((j >> 2) & 1));
-                    var chunk = chunkToMesh + offset;
-
-                    if(!_chunkManager.LoadedChunks.ContainsKey(chunk))
+                    if (!_chunkManager.LoadedChunks.ContainsKey(chunkToMesh + _chunkNeighborOffsets[j]))
                     {
                         hasEdgeChunks = false;
                         break;
                     }
                 }
 
-                if(!hasEdgeChunks)
+                if (!hasEdgeChunks)
                 {
                     _meshingQueue.Enqueue(chunkToMesh);
                     continue;
