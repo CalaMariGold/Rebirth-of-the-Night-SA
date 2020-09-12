@@ -125,8 +125,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _handle: {fileID: 0}
   _camera: {fileID: 1628124208133039163}
+  _chunkManager: {fileID: 0}
   _range: 20
   _handleHeight: 0.2
+  _radius: 2
+  _delta: 0.02
 --- !u!1 &1628124208133039166
 GameObject:
   m_ObjectHideFlags: 0

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Rebirth.Terrain.Voxel;
 using UnityEngine;
 
 namespace Rebirth.Terrain.Chunk
@@ -15,6 +16,7 @@ namespace Rebirth.Terrain.Chunk
     {
         public event Action<Vector3Int> ChunkLoaded;
         public event Action<Vector3Int> ChunkUnloaded;
+        public event Action<Vector3Int> ChunkModified;
         
         [SerializeField] private Transform _chunkLoadingTarget;
         [SerializeField] private int _chunkSize;
@@ -22,6 +24,8 @@ namespace Rebirth.Terrain.Chunk
         
         // Which chunks are we waiting for load
         private HashSet<Vector3Int> _loadingChunks;
+        // Which chunks have been modified
+        private HashSet<Vector3Int> _modifiedChunks;
         // Freshly loaded chunks to be consumed by the main thread into _loadedChunks on update
         private ConcurrentQueue<(Vector3Int, IChunk)> _freshChunks;
         // Chunk load queue consumed by the load thread
@@ -57,6 +61,52 @@ namespace Rebirth.Terrain.Chunk
             _chunkLoader = chunkLoader;
         }
 
+        /// <summary>
+        /// Gets or sets the voxel data at a given location.
+        /// </summary>
+        public VoxelInfo this[int x, int y, int z]
+        {
+            get
+            {
+                var modX = Mod(x, _chunkSize);
+                var modY = Mod(y, _chunkSize);
+                var modZ = Mod(z, _chunkSize);
+                var chunk = LoadedChunks[
+                    new Vector3Int(
+                        (x - modX) / _chunkSize,
+                        (y - modY) / _chunkSize,
+                        (z - modZ) / _chunkSize
+                    )
+                ];
+                return chunk[modX, modY, modZ];
+            }
+            set
+            {
+                var modX = Mod(x, _chunkSize);
+                var modY = Mod(y, _chunkSize);
+                var modZ = Mod(z, _chunkSize);
+                var chunkLocation = new Vector3Int(
+                    (x - modX) / _chunkSize,
+                    (y - modY) / _chunkSize,
+                    (z - modZ) / _chunkSize
+                );
+                var chunk = LoadedChunks[chunkLocation];
+                chunk[modX, modY, modZ] = value;
+                _modifiedChunks.Add(chunkLocation);
+            }
+        }
+
+        /// <summary>
+        /// Perform a modulo with only positive return values.
+        /// </summary>
+        /// <param name="x">The number to perform the modulo operation on.</param>
+        /// <param name="m">The divisor.</param>
+        /// <returns></returns>
+        private static int Mod(int x, int m)
+        {
+            return (x % m + m) % m;
+        }
+
         private void Awake()
         {
             // Create required objects and collections for Async chunk loads
@@ -65,6 +115,7 @@ namespace Rebirth.Terrain.Chunk
             _freshChunks = new ConcurrentQueue<(Vector3Int, IChunk)>();
             _chunksToLoad = new BlockingCollection<Vector3Int>(new ConcurrentQueue<Vector3Int>());
             _recyclableChunks = new ConcurrentBag<IChunk>();
+            _modifiedChunks = new HashSet<Vector3Int>();
         }
 
         private void OnEnable()
@@ -125,6 +176,11 @@ namespace Rebirth.Terrain.Chunk
         {
             QueueNewChunkLoads();
             ApplyFreshChunks();
+            foreach (var modifiedChunk in _modifiedChunks)
+            {
+                ChunkModified?.Invoke(modifiedChunk);
+            }
+            _modifiedChunks.Clear();
         }
 
         /// <summary>

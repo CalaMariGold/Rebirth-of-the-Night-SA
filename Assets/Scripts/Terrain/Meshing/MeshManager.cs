@@ -61,6 +61,7 @@ namespace Rebirth.Terrain.Meshing
             // Handle chunk load & unload events from _chunkManager
             _chunkManager.ChunkLoaded += OnChunkLoaded;
             _chunkManager.ChunkUnloaded += UnloadChunkMesh;
+            _chunkManager.ChunkModified += OnChunkModified;
         }
 
         public void OnDisable()
@@ -68,6 +69,7 @@ namespace Rebirth.Terrain.Meshing
             // Remove event handlers
             _chunkManager.ChunkLoaded -= OnChunkLoaded;
             _chunkManager.ChunkUnloaded -= UnloadChunkMesh;
+            _chunkManager.ChunkModified -= OnChunkModified;
         }
 
         /// <summary>
@@ -86,6 +88,21 @@ namespace Rebirth.Terrain.Meshing
                     _meshingQueue.Enqueue(chunkLocation - offset);
                 }
             }
+        }
+        
+        /// <summary>
+        /// Handle the ChunkModified event.
+        /// </summary>
+        /// <param name="chunkLocation">The location of the modified chunk.</param>
+        private void OnChunkModified(Vector3Int chunkLocation)
+        {
+            if (!LoadChunkMesh(chunkLocation, out var mesh))
+            {
+                return;
+            }
+
+            UnloadChunkMesh(chunkLocation);
+            CreateMeshedObject(chunkLocation, mesh);
         }
 
         /// <summary>

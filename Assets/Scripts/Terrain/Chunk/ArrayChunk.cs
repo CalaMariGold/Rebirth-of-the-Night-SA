@@ -39,10 +39,14 @@ namespace Rebirth.Terrain.Chunk
         }
 
         /// <summary>
-        /// Gets the <see cref="VoxelInfo"/> for the voxel at a given location
+        /// Gets or sets the <see cref="VoxelInfo"/> for the voxel at a given location
         /// within the chunk.
         /// </summary>
-        public VoxelInfo this[int x, int y, int z] => _voxelData[x, y, z];
+        public VoxelInfo this[int x, int y, int z]
+        {
+            get => _voxelData[x, y, z];
+            set => _voxelData[x, y, z] = value;
+        }
 
         /// <summary>
         /// Gets the width of the chunk in the x-axis.
