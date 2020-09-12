@@ -16,7 +16,7 @@ namespace Rebirth.Terrain.Chunk
     {
         public event Action<Vector3Int> ChunkLoaded;
         public event Action<Vector3Int> ChunkUnloaded;
-        public event Action<Vector3Int> ChunkModified;
+        public event EventHandler<ChunkModifiedEventArgs> ChunkModified;
         
         [SerializeField] private Transform _chunkLoadingTarget;
         [SerializeField] private int _chunkSize;
@@ -25,7 +25,7 @@ namespace Rebirth.Terrain.Chunk
         // Which chunks are we waiting for load
         private HashSet<Vector3Int> _loadingChunks;
         // Which chunks have been modified
-        private HashSet<Vector3Int> _modifiedChunks;
+        private Dictionary<Vector3Int, HashSet<Vector3Int>> _modifiedChunks;
         // Freshly loaded chunks to be consumed by the main thread into _loadedChunks on update
         private ConcurrentQueue<(Vector3Int, IChunk)> _freshChunks;
         // Chunk load queue consumed by the load thread
@@ -92,8 +92,18 @@ namespace Rebirth.Terrain.Chunk
                 );
                 var chunk = LoadedChunks[chunkLocation];
                 chunk[modX, modY, modZ] = value;
-                _modifiedChunks.Add(chunkLocation);
+                SetChunkModified(chunkLocation, new Vector3Int(modX, modY, modZ));
             }
+        }
+
+        private void SetChunkModified(Vector3Int chunkLocation, Vector3Int voxelLocation)
+        {
+            if (!_modifiedChunks.ContainsKey(chunkLocation))
+            {
+                _modifiedChunks.Add(chunkLocation, new HashSet<Vector3Int>());
+            }
+
+            _modifiedChunks[chunkLocation].Add(voxelLocation);
         }
 
         /// <summary>
@@ -115,7 +125,7 @@ namespace Rebirth.Terrain.Chunk
             _freshChunks = new ConcurrentQueue<(Vector3Int, IChunk)>();
             _chunksToLoad = new BlockingCollection<Vector3Int>(new ConcurrentQueue<Vector3Int>());
             _recyclableChunks = new ConcurrentBag<IChunk>();
-            _modifiedChunks = new HashSet<Vector3Int>();
+            _modifiedChunks = new Dictionary<Vector3Int, HashSet<Vector3Int>>();
         }
 
         private void OnEnable()
@@ -178,7 +188,11 @@ namespace Rebirth.Terrain.Chunk
             ApplyFreshChunks();
             foreach (var modifiedChunk in _modifiedChunks)
             {
-                ChunkModified?.Invoke(modifiedChunk);
+                ChunkModified?.Invoke(this, new ChunkModifiedEventArgs
+                {
+                    ChunkLocation = modifiedChunk.Key,
+                    ModifiedVoxels = modifiedChunk.Value
+                });
             }
             _modifiedChunks.Clear();
         }
@@ -257,5 +271,11 @@ namespace Rebirth.Terrain.Chunk
                 Gizmos.DrawWireCube(worldSpaceCoord, Vector3.one * _chunkSize);
             }
         }
+    }
+    
+    public class ChunkModifiedEventArgs : EventArgs
+    {
+        public Vector3Int ChunkLocation { get; set; }
+        public IEnumerable<Vector3Int> ModifiedVoxels { get; set; }
     }
 }

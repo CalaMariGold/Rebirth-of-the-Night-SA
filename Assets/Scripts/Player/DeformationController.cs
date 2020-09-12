@@ -14,6 +14,8 @@ namespace Rebirth.Player
         [SerializeField] private float _handleHeight = 0.1f;
         [SerializeField] private float _radius = 2;
         [SerializeField] private float _delta = 0.1f;
+        [SerializeField] private float _raycastRadius = 0.5f;
+        
         private bool _isRaising;
         private bool _isDigging;
 
@@ -45,8 +47,8 @@ namespace Rebirth.Player
         {
             var position = _camera.position;
             var forward = _camera.forward;
-            var hasResult = Physics.Raycast(
-                position, forward,
+            var hasResult = Physics.SphereCast(
+                position, _raycastRadius, forward,
                 out var result, _range
             );
             if (!hasResult)

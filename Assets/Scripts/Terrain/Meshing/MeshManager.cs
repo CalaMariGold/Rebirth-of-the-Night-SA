@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Rebirth.Terrain.Chunk;
 using UnityEngine;
 
@@ -22,6 +23,8 @@ namespace Rebirth.Terrain.Meshing
         // Chunks which still need to be meshed
         private readonly HashSet<Vector3Int> _chunksToMesh = new HashSet<Vector3Int>();
         private readonly Queue<Vector3Int> _meshingQueue = new Queue<Vector3Int>();
+        // Chunks which should be meshed this frame
+        private readonly HashSet<Vector3Int> _urgentChunks = new HashSet<Vector3Int>();
 
         /// <summary>
         /// Inject dependencies for the class.
@@ -47,13 +50,16 @@ namespace Rebirth.Terrain.Meshing
 
             var chunkToMesh = _meshingQueue.Dequeue();
             _chunksToMesh.Remove(chunkToMesh);
-            if (!LoadChunkMesh(chunkToMesh, out var mesh))
-            {
-                return;
-            }
+            LoadChunk(chunkToMesh);
+        }
 
-            UnloadChunkMesh(chunkToMesh);
-            CreateMeshedObject(chunkToMesh, mesh);
+        public void LateUpdate()
+        {
+            foreach (var urgentChunk in _urgentChunks)
+            {
+                LoadChunk(urgentChunk);
+            }
+            _urgentChunks.Clear();
         }
 
         public void OnEnable()
@@ -93,8 +99,55 @@ namespace Rebirth.Terrain.Meshing
         /// <summary>
         /// Handle the ChunkModified event.
         /// </summary>
-        /// <param name="chunkLocation">The location of the modified chunk.</param>
-        private void OnChunkModified(Vector3Int chunkLocation)
+        /// <param name="sender">The object which invoked the event.</param>
+        /// <param name="args">Info about the modified chunk.</param>
+        private void OnChunkModified(object sender, ChunkModifiedEventArgs args)
+        {
+            _urgentChunks.Add(args.ChunkLocation);
+            
+            // Deal with modified borders; this can cause multiple reloads per frame
+            var borders = new List<byte>();
+            foreach (var modifiedVoxel in args.ModifiedVoxels)
+            {
+                byte border = 0;
+                if (modifiedVoxel.x == 0)
+                {
+                    border |= 4;
+                }
+                if (modifiedVoxel.y == 0)
+                {
+                    border |= 2;
+                }
+                if (modifiedVoxel.z == 0)
+                {
+                    border |= 1;
+                }
+
+                for (byte i = 1; i < 8; i++)
+                {
+                    if ((i & border) == i)
+                    {
+                        borders.Add(i);
+                    }
+                }
+            }
+
+            foreach (var border in borders.Distinct())
+            {
+                var vec = new Vector3Int(
+                    border >> 2,
+                    (border >> 1) & 1,
+                    border & 1
+                );
+                _urgentChunks.Add(args.ChunkLocation - vec);
+            }
+        }
+
+        /// <summary>
+        /// Load the mesh for a chunk and create its GameObject.
+        /// </summary>
+        /// <param name="chunkLocation">The chunk's location.</param>
+        private void LoadChunk(Vector3Int chunkLocation)
         {
             if (!LoadChunkMesh(chunkLocation, out var mesh))
             {
