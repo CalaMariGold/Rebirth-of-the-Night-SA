@@ -285,7 +285,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 764674788}
-  - component: {fileID: 764674789}
   - component: {fileID: 764674787}
   - component: {fileID: 764674790}
   m_Layer: 0
@@ -318,6 +317,9 @@ MonoBehaviour:
   _texture: {fileID: 2800000, guid: 0f1758d235090ac4a9bc3ccc504df391, type: 3}
   _material: {fileID: 2100000, guid: 8d63fba1a1c0b6941a510caf46d9a982, type: 2}
   _autoUpdateInEditor: 0
+  _snow: {fileID: 11400000, guid: 098e05f32e054e940ad65298134e3f9a, type: 2}
+  _grass: {fileID: 11400000, guid: 893cdb276c6fd0541bd5f479b9e81178, type: 2}
+  _rock: {fileID: 11400000, guid: c41646f6e7e99dd4ca673d81a3334749, type: 2}
 --- !u!4 &764674788
 Transform:
   m_ObjectHideFlags: 0
