@@ -1,6 +1,8 @@
 using Rebirth.Terrain.Chunk;
 using Rebirth.Terrain.Meshing;
 using Rebirth.Terrain.Generation;
+using Rebirth.Terrain.Generation.Nodes;
+using Rebirth.Terrain.Voxel;
 using UnityEngine;
 
 namespace Rebirth.Terrain.Behaviours
@@ -12,6 +14,7 @@ namespace Rebirth.Terrain.Behaviours
         [SerializeField] private int _chunkSize;
         [SerializeField] private TerrainGraph _graph;
         private ChunkManager _chunkManager;
+        private TerrainNode.Generator<VoxelInfo> _graphGenerator;
 
         public void Awake()
         {
@@ -21,6 +24,7 @@ namespace Rebirth.Terrain.Behaviours
             _chunkManager.Setup(
                 ChunkFactory
             );
+            _graphGenerator = _graph.GetValue();
         }
 
         private IChunk ChunkFactory(int x, int y, int z)
@@ -39,12 +43,12 @@ namespace Rebirth.Terrain.Behaviours
                 {
                     for (var z = 0; z < chunk.Depth; z++)
                     {
-                        _graph.Position = new Vector3Int(
+                        var position = new Vector3Int(
                             x + chunk.OffsetX,
                             y + chunk.OffsetY,
                             z + chunk.OffsetZ
                         );
-                        chunk[x, y, z] = _graph.GetValue();
+                        chunk[x, y, z] = _graphGenerator(position);
                     }
                 }
             }

@@ -8,10 +8,9 @@ namespace Rebirth.Terrain.Generation
     [CreateAssetMenu(menuName = "Terrain Graph")]
     public class TerrainGraph : NodeGraph
     { 
-        [SerializeField] private VoxelInfoNode _outputNode;
-        public Vector3Int Position { get; set; }
+        [SerializeField] private VoxelOutputNode _outputNode;
 
-        public VoxelInfo GetValue()
+        public TerrainNode.Generator<VoxelInfo> GetValue()
         {
             return _outputNode.GetValue();
         }

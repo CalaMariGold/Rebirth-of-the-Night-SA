@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: Perlin Hills
   m_EditorClassIdentifier: 
   nodes:
-  - {fileID: 6107866772634321389}
   - {fileID: 9008958032636853980}
   - {fileID: 7259056052119327308}
-  _outputNode: {fileID: 6107866772634321389}
---- !u!114 &6107866772634321389
+  - {fileID: 521768417291247675}
+  _outputNode: {fileID: 521768417291247675}
+--- !u!114 &521768417291247675
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -27,17 +27,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 67a593206eab445bbd25f7bb06dbd6f9, type: 3}
-  m_Name: Voxel Info
+  m_Name: Voxel Output
   m_EditorClassIdentifier: 
   graph: {fileID: 11400000}
-  position: {x: 200, y: -88}
+  position: {x: 184, y: -104}
   ports:
     keys:
     - _distance
     - _voxelType
     values:
     - _fieldName: _distance
-      _node: {fileID: 6107866772634321389}
+      _node: {fileID: 521768417291247675}
       _typeQualifiedName: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
       connections:
@@ -49,7 +49,7 @@ MonoBehaviour:
       _typeConstraint: 0
       _dynamic: 0
     - _fieldName: _voxelType
-      _node: {fileID: 6107866772634321389}
+      _node: {fileID: 521768417291247675}
       _typeQualifiedName: Rebirth.Terrain.Voxel.VoxelType, Assembly-CSharp, Version=0.0.0.0,
         Culture=neutral, PublicKeyToken=null
       connections: []
@@ -72,7 +72,7 @@ MonoBehaviour:
   m_Name: Unity Perlin
   m_EditorClassIdentifier: 
   graph: {fileID: 11400000}
-  position: {x: -296, y: -88}
+  position: {x: -344, y: -104}
   ports:
     keys:
     - _value
@@ -103,10 +103,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: eba2e6bccc8d4d5ca4c19bc20ee4d89d, type: 3}
-  m_Name: Height
+  m_Name: Height Conversion
   m_EditorClassIdentifier: 
   graph: {fileID: 11400000}
-  position: {x: -40, y: -88}
+  position: {x: -72, y: -104}
   ports:
     keys:
     - _height
@@ -130,12 +130,12 @@ MonoBehaviour:
         PublicKeyToken=b77a5c561934e089
       connections:
       - fieldName: _distance
-        node: {fileID: 6107866772634321389}
+        node: {fileID: 521768417291247675}
         reroutePoints: []
       _direction: 1
       _connectionType: 0
       _typeConstraint: 0
       _dynamic: 0
-  _height: 5
+  _height: 0
   _value: 0
   _baseHeight: 0

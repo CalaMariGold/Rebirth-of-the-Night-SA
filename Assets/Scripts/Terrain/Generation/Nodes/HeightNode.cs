@@ -3,8 +3,8 @@ using XNode;
 
 namespace Rebirth.Terrain.Generation.Nodes
 {
-    [CreateNodeMenu("Manipulation/Height")]
-    public class HeightNode : Node
+    [CreateNodeMenu("Manipulation/Height Conversion")]
+    public class HeightNode : TerrainNode
     {
         [Input, SerializeField] private float _height;
         [Output, SerializeField] private float _value;
@@ -13,12 +13,8 @@ namespace Rebirth.Terrain.Generation.Nodes
 
         public override object GetValue(NodePort port)
         {
-            if (graph is TerrainGraph terrainGraph)
-            {
-                return terrainGraph.Position.y - _baseHeight - GetInputValue("_height", _height);
-            }
-
-            return null;
+            var height = GetInputValue<Generator<float>>("_height", _ => _height);
+            return new Generator<float>(i => i.y - _baseHeight - height(i));
         }
     }
 }
