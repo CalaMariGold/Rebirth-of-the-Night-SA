@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using Rebirth.Terrain.Chunk;
 using Rebirth.Terrain.Meshing;
 using Rebirth.Terrain.Voxel;
@@ -11,7 +10,6 @@ namespace Rebirth.Terrain.Behaviours
     /// Provides a GameObject holding the mesh for a single chunk.
     /// </summary>
     [ExecuteInEditMode]
-    [RequireComponent(typeof(VoxelTypeRepository))]
     public class SingleChunkViewer : MonoBehaviour
     {
         [SerializeField] private int _chunkSubdivisions = 5;
@@ -25,6 +23,12 @@ namespace Rebirth.Terrain.Behaviours
         [SerializeField] private Texture2D _texture;
         [SerializeField] private Material _material;
         [SerializeField] private bool _autoUpdateInEditor;
+        
+        [Header("Voxel Types")]
+        // Voxel types
+        [SerializeField] private VoxelType _snow;
+        [SerializeField] private VoxelType _grass;
+        [SerializeField] private VoxelType _rock;
 
         private bool _settingsUpdated;
 
@@ -34,14 +38,11 @@ namespace Rebirth.Terrain.Behaviours
         private GameObject _meshHolder;
         private IVoxelProvider _voxelProvider;
         private IMeshGenerator _meshGenerator;
-        private VoxelTypeRepository _voxelTypeRepository;
 
         private void Awake()
         {
             _meshGenerator = GetComponent<IMeshGenerator>();
-            _voxelTypeRepository = GetComponent<VoxelTypeRepository>();
         }
-
         private void Update()
         {
             if (!_settingsUpdated)
@@ -79,9 +80,9 @@ namespace Rebirth.Terrain.Behaviours
                 BaseHeight = _groundHeight,
                 RockHeight = _rockHeight,
                 SnowHeight = _snowHeight,
-                Snow = FindVoxelType("Snow"),
-                Rock = FindVoxelType("Rock"),
-                Grass = FindVoxelType("Grass")
+                Snow = _snow,
+                Rock = _rock,
+                Grass = _grass
             };
             // Create a new chunk and fill with voxels based on _voxelProvider
             var width = 1 << _chunkSubdivisions;
@@ -119,11 +120,6 @@ namespace Rebirth.Terrain.Behaviours
                 );
                 meshFilter.sharedMesh.RecalculateNormals();
             }
-        }
-
-        private IVoxelType FindVoxelType(string typeName)
-        {
-            return _voxelTypeRepository.VoxelTypes.SingleOrDefault(v => v.Name == typeName);
         }
     }
 }

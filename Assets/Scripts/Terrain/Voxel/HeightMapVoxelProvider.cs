@@ -11,9 +11,9 @@ namespace Rebirth.Terrain.Voxel
         public float BaseHeight { get; set; }
         public float RockHeight { get; set; }
         public float SnowHeight { get; set; }
-        public IVoxelType Snow { get; set; }
-        public IVoxelType Rock { get; set; }
-        public IVoxelType Grass { get; set; }
+        public VoxelType Snow { get; set; }
+        public VoxelType Rock { get; set; }
+        public VoxelType Grass { get; set; }
         
         public VoxelInfo GetVoxelInfo(int x, int y, int z)
         {
@@ -28,7 +28,7 @@ namespace Rebirth.Terrain.Voxel
             };
         }
 
-        private IVoxelType GetVoxelType(int height)
+        private VoxelType GetVoxelType(int height)
         {
             if (height > SnowHeight)
             {

@@ -21,7 +21,7 @@ namespace Rebirth.Terrain.Voxel
         /// <summary>
         /// Gets or sets the type of voxel.
         /// </summary>
-        public IVoxelType VoxelType;
+        public VoxelType VoxelType;
         
         /// <summary>
         /// Convert the voxel info to data which can be passed to a compute shader.

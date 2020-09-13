@@ -126,7 +126,7 @@ namespace Rebirth.Terrain.Chunk
         /// <param name="reader">An object used to read from the stream.</param>
         /// <param name="voxelTypeProvider">A delegate to look up voxel types by ID.</param>
         /// <returns><c>true</c> if the chunk could be deserialized; otherwise, <c>false</c>.</returns>
-        public bool Deserialize(BinaryReader reader, Func<int, IVoxelType> voxelTypeProvider)
+        public bool Deserialize(BinaryReader reader, Func<int, VoxelType> voxelTypeProvider)
         {
             if (reader.ReadString() != GetType().Name)
             {

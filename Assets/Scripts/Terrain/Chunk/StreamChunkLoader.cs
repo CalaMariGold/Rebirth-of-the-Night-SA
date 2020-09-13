@@ -13,7 +13,7 @@ namespace Rebirth.Terrain.Chunk
     {
 
         private readonly BinaryReader _reader;
-        private readonly Func<int, IVoxelType> _voxelTypeProvider;
+        private readonly Func<int, VoxelType> _voxelTypeProvider;
 
         /// <summary>
         /// Initialises a new instance of the <see cref="StreamChunkLoader"/> class.
@@ -24,7 +24,7 @@ namespace Rebirth.Terrain.Chunk
         /// Specifies whether to leave open the stream after the <see cref="StreamChunkLoader"/> is disposed.
         /// </param>
         public StreamChunkLoader(Stream stream,
-            Func<int, IVoxelType> voxelTypeProvider, bool leaveOpen = false)
+            Func<int, VoxelType> voxelTypeProvider, bool leaveOpen = false)
         {
             _reader = new BinaryReader(stream, Encoding.Default, leaveOpen);
             _voxelTypeProvider = voxelTypeProvider;
