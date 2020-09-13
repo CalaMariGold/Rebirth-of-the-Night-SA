@@ -1,5 +1,12 @@
 {
   "dependencies": {
+    "com.github.siccity.xnode": {
+      "version": "https://github.com/Siccity/xNode.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "af34ea6c47fc6be5ff913b52b5be0ecee5b8775b"
+    },
     "com.unity.collab-proxy": {
       "version": "1.3.9",
       "depth": 0,

@@ -12,10 +12,10 @@ namespace Rebirth.Terrain.Chunk
     public interface IChunk : IEnumerable<KeyValuePair<Vector3Int, VoxelInfo>>
     {
         /// <summary>
-        /// Gets the <see cref="VoxelInfo"/> for the voxel at a given location
+        /// Gets or sets the <see cref="VoxelInfo"/> for the voxel at a given location
         /// within the chunk.
         /// </summary>
-        VoxelInfo this[int x, int y, int z] { get; }
+        VoxelInfo this[int x, int y, int z] { get; set; }
 
         /// <summary>
         /// Gets the width of the chunk in the x-axis.

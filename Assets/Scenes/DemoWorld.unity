@@ -334,28 +334,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &764674789
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 764674786}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 512686bb4d1949fcb4c914b268300aec, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _voxelTypes:
-  - _id: 0
-    _color: {r: 0.16893235, g: 0.4528302, b: 0, a: 1}
-    _name: Grass
-  - _id: 1
-    _color: {r: 0.3962264, g: 0.3962264, b: 0.3962264, a: 1}
-    _name: Rock
-  - _id: 2
-    _color: {r: 0.8396226, g: 0.8396226, b: 0.8396226, a: 1}
-    _name: Snow
 --- !u!114 &764674790
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -380,8 +358,8 @@ GameObject:
   - component: {fileID: 813522796}
   - component: {fileID: 813522795}
   - component: {fileID: 813522798}
-  - component: {fileID: 813522797}
   - component: {fileID: 813522799}
+  - component: {fileID: 813522797}
   m_Layer: 0
   m_Name: Terrain Manager
   m_TagString: Untagged
@@ -427,11 +405,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 813522794}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 534e97f8b8bb40e6aa42388c64b44f19, type: 3}
+  m_Script: {fileID: 11500000, guid: 4a8345282d0143af8ce862b62b764bac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _chunkSize: 32
-  _offset: {x: 1000, y: 1000}
+  _graph: {fileID: 11400000, guid: e8213a56586970148a2bbad312026aad, type: 2}
 --- !u!114 &813522798
 MonoBehaviour:
   m_ObjectHideFlags: 0
