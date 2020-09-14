@@ -14,7 +14,7 @@ namespace Rebirth.Terrain.Behaviours
         [SerializeField] private int _chunkSize;
         [SerializeField] private TerrainGraph _graph;
         private ChunkManager _chunkManager;
-        private TerrainNode.Generator<VoxelInfo> _graphGenerator;
+        private Generator<VoxelInfo> _graphGenerator;
 
         public void Awake()
         {

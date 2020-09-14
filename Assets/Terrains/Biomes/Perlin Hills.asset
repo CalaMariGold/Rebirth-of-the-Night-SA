@@ -1,5 +1,81 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-7840961119315129456
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67a593206eab445bbd25f7bb06dbd6f9, type: 3}
+  m_Name: Voxel Output
+  m_EditorClassIdentifier: 
+  graph: {fileID: 11400000}
+  position: {x: 136, y: -40}
+  ports:
+    keys:
+    - _distance
+    - _voxelType
+    values:
+    - _fieldName: _distance
+      _node: {fileID: -7840961119315129456}
+      _typeQualifiedName: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
+        PublicKeyToken=b77a5c561934e089
+      connections:
+      - fieldName: _value
+        node: {fileID: 376689480107554301}
+        reroutePoints: []
+      _direction: 0
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+    - _fieldName: _voxelType
+      _node: {fileID: -7840961119315129456}
+      _typeQualifiedName: Rebirth.Terrain.Voxel.VoxelType, Assembly-CSharp, Version=0.0.0.0,
+        Culture=neutral, PublicKeyToken=null
+      connections: []
+      _direction: 0
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+  _distance: 0
+  _voxelType: {fileID: 11400000, guid: 098e05f32e054e940ad65298134e3f9a, type: 2}
+--- !u!114 &-6446417917359774113
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d47fcf443b6641ae8ac7a59cbe58c517, type: 3}
+  m_Name: Unity Perlin
+  m_EditorClassIdentifier: 
+  graph: {fileID: 11400000}
+  position: {x: -392, y: -56}
+  ports:
+    keys:
+    - _value
+    values:
+    - _fieldName: _value
+      _node: {fileID: -6446417917359774113}
+      _typeQualifiedName: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
+        PublicKeyToken=b77a5c561934e089
+      connections:
+      - fieldName: _height
+        node: {fileID: 376689480107554301}
+        reroutePoints: []
+      _direction: 1
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+  _value: 0
+  _frequency: {x: 0.1, y: 0.1}
+  _offset: {x: 1000, y: 1000}
+  _amplitude: 10
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13,87 +89,11 @@ MonoBehaviour:
   m_Name: Perlin Hills
   m_EditorClassIdentifier: 
   nodes:
-  - {fileID: 9008958032636853980}
-  - {fileID: 7259056052119327308}
-  - {fileID: 521768417291247675}
-  _outputNode: {fileID: 521768417291247675}
---- !u!114 &521768417291247675
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 67a593206eab445bbd25f7bb06dbd6f9, type: 3}
-  m_Name: Voxel Output
-  m_EditorClassIdentifier: 
-  graph: {fileID: 11400000}
-  position: {x: 184, y: -104}
-  ports:
-    keys:
-    - _distance
-    - _voxelType
-    values:
-    - _fieldName: _distance
-      _node: {fileID: 521768417291247675}
-      _typeQualifiedName: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
-        PublicKeyToken=b77a5c561934e089
-      connections:
-      - fieldName: _value
-        node: {fileID: 9008958032636853980}
-        reroutePoints: []
-      _direction: 0
-      _connectionType: 0
-      _typeConstraint: 0
-      _dynamic: 0
-    - _fieldName: _voxelType
-      _node: {fileID: 521768417291247675}
-      _typeQualifiedName: Rebirth.Terrain.Voxel.VoxelType, Assembly-CSharp, Version=0.0.0.0,
-        Culture=neutral, PublicKeyToken=null
-      connections: []
-      _direction: 0
-      _connectionType: 0
-      _typeConstraint: 0
-      _dynamic: 0
-  _distance: 0
-  _voxelType: {fileID: 11400000, guid: 098e05f32e054e940ad65298134e3f9a, type: 2}
---- !u!114 &7259056052119327308
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d47fcf443b6641ae8ac7a59cbe58c517, type: 3}
-  m_Name: Unity Perlin
-  m_EditorClassIdentifier: 
-  graph: {fileID: 11400000}
-  position: {x: -344, y: -104}
-  ports:
-    keys:
-    - _value
-    values:
-    - _fieldName: _value
-      _node: {fileID: 7259056052119327308}
-      _typeQualifiedName: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
-        PublicKeyToken=b77a5c561934e089
-      connections:
-      - fieldName: _height
-        node: {fileID: 9008958032636853980}
-        reroutePoints: []
-      _direction: 1
-      _connectionType: 0
-      _typeConstraint: 0
-      _dynamic: 0
-  _value: 0
-  _frequency: {x: 0.1, y: 0.1}
-  _offset: {x: 1000, y: 1000}
-  _amplitude: 5
---- !u!114 &9008958032636853980
+  - {fileID: -6446417917359774113}
+  - {fileID: 376689480107554301}
+  - {fileID: -7840961119315129456}
+  _outputNode: {fileID: -7840961119315129456}
+--- !u!114 &376689480107554301
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -103,34 +103,34 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: eba2e6bccc8d4d5ca4c19bc20ee4d89d, type: 3}
-  m_Name: Height Conversion
+  m_Name: Height
   m_EditorClassIdentifier: 
   graph: {fileID: 11400000}
-  position: {x: -72, y: -104}
+  position: {x: -120, y: -56}
   ports:
     keys:
     - _height
     - _value
     values:
     - _fieldName: _height
-      _node: {fileID: 9008958032636853980}
+      _node: {fileID: 376689480107554301}
       _typeQualifiedName: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
       connections:
       - fieldName: _value
-        node: {fileID: 7259056052119327308}
+        node: {fileID: -6446417917359774113}
         reroutePoints: []
       _direction: 0
       _connectionType: 0
       _typeConstraint: 0
       _dynamic: 0
     - _fieldName: _value
-      _node: {fileID: 9008958032636853980}
+      _node: {fileID: 376689480107554301}
       _typeQualifiedName: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
       connections:
       - fieldName: _distance
-        node: {fileID: 521768417291247675}
+        node: {fileID: -7840961119315129456}
         reroutePoints: []
       _direction: 1
       _connectionType: 0

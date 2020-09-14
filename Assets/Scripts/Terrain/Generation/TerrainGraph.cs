@@ -10,7 +10,7 @@ namespace Rebirth.Terrain.Generation
     { 
         [SerializeField] private VoxelOutputNode _outputNode;
 
-        public TerrainNode.Generator<VoxelInfo> GetValue()
+        public Generator<VoxelInfo> GetValue()
         {
             return _outputNode.GetValue();
         }

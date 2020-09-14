@@ -1,10 +1,11 @@
 using Rebirth.Terrain.Voxel;
 using UnityEngine;
+using XNode;
 
 namespace Rebirth.Terrain.Generation.Nodes
 {
     [CreateNodeMenu("Output/Voxel Output")]
-    public class VoxelOutputNode : TerrainNode
+    public class VoxelOutputNode : Node
     {
         [Input, SerializeField] private float _distance;
         [Input, SerializeField] private VoxelType _voxelType;

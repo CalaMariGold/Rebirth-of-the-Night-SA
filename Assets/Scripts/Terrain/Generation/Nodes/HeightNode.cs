@@ -4,17 +4,22 @@ using XNode;
 namespace Rebirth.Terrain.Generation.Nodes
 {
     [CreateNodeMenu("Manipulation/Height Conversion")]
-    public class HeightNode : TerrainNode
+    public class HeightNode : TerrainNode<float, float>
     {
         [Input, SerializeField] private float _height;
         [Output, SerializeField] private float _value;
 
         [SerializeField] private float _baseHeight;
 
-        public override object GetValue(NodePort port)
+        protected override Generator<float> GetDelegate(NodePort port)
         {
             var height = GetInputValue<Generator<float>>("_height", _ => _height);
-            return new Generator<float>(i => i.y - _baseHeight - height(i));
+            return CreateDelegate(height);
+        }
+
+        protected override float Generate(Vector3Int location, float input)
+        {
+            return location.y - _baseHeight - input;
         }
     }
 }
