@@ -82,6 +82,11 @@ namespace Rebirth.Terrain.Meshing
                 var chunkToMesh = _meshingQueue.Dequeue();
                 var hasEdgeChunks = true;
 
+                // Disregard if this chunk has been unloaded
+                if (!_chunksToMesh.Contains(chunkToMesh)){
+                    continue;
+                }
+
                 // Ensures that chunks necessary for meshing are present 
                 for (var j = 0; j < 8; j++)
                 {
@@ -203,6 +208,7 @@ namespace Rebirth.Terrain.Meshing
         /// <param name="chunkLocation">The location of the chunk.</param>
         private void UnloadChunkMesh(Vector3Int chunkLocation)
         {
+            _chunksToMesh.Remove(chunkLocation);
             if (!_meshHolders.TryGetValue(chunkLocation, out var chunkHolder))
             {
                 // No valid loaded chunk
