@@ -6,7 +6,9 @@ namespace Rebirth.Terrain.Generation.Nodes
     [CreateNodeMenu("Manipulation/Height Conversion")]
     public class HeightNode : TerrainNode<float, float>
     {
-        [Input, SerializeField] private float _height;
+        [Input(connectionType: ConnectionType.Override)]
+        [SerializeField] private float _height;
+        
         [Output, SerializeField] private float _value;
 
         [SerializeField] private float _baseHeight;

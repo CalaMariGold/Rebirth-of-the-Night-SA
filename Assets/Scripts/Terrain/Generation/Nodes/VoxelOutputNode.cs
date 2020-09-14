@@ -7,8 +7,11 @@ namespace Rebirth.Terrain.Generation.Nodes
     [CreateNodeMenu("Output/Voxel Output")]
     public class VoxelOutputNode : Node
     {
-        [Input, SerializeField] private float _distance;
-        [Input, SerializeField] private VoxelType _voxelType;
+        [Input(connectionType: ConnectionType.Override)]
+        [SerializeField] private float _distance;
+        
+        [Input(connectionType: ConnectionType.Override)]
+        [SerializeField] private VoxelType _voxelType;
 
         public Generator<VoxelInfo> GetValue()
         {

@@ -13,12 +13,21 @@ MonoBehaviour:
   m_Name: Voxel Output
   m_EditorClassIdentifier: 
   graph: {fileID: 11400000}
-  position: {x: 136, y: -40}
+  position: {x: 456, y: 136}
   ports:
     keys:
-    - _distance
     - _voxelType
+    - _distance
     values:
+    - _fieldName: _voxelType
+      _node: {fileID: -7840961119315129456}
+      _typeQualifiedName: Rebirth.Terrain.Voxel.VoxelType, Assembly-CSharp, Version=0.0.0.0,
+        Culture=neutral, PublicKeyToken=null
+      connections: []
+      _direction: 0
+      _connectionType: 1
+      _typeConstraint: 0
+      _dynamic: 0
     - _fieldName: _distance
       _node: {fileID: -7840961119315129456}
       _typeQualifiedName: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
@@ -28,20 +37,11 @@ MonoBehaviour:
         node: {fileID: 376689480107554301}
         reroutePoints: []
       _direction: 0
-      _connectionType: 0
-      _typeConstraint: 0
-      _dynamic: 0
-    - _fieldName: _voxelType
-      _node: {fileID: -7840961119315129456}
-      _typeQualifiedName: Rebirth.Terrain.Voxel.VoxelType, Assembly-CSharp, Version=0.0.0.0,
-        Culture=neutral, PublicKeyToken=null
-      connections: []
-      _direction: 0
-      _connectionType: 0
+      _connectionType: 1
       _typeConstraint: 0
       _dynamic: 0
   _distance: 0
-  _voxelType: {fileID: 11400000, guid: 098e05f32e054e940ad65298134e3f9a, type: 2}
+  _voxelType: {fileID: 11400000, guid: 893cdb276c6fd0541bd5f479b9e81178, type: 2}
 --- !u!114 &-6446417917359774113
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -55,7 +55,7 @@ MonoBehaviour:
   m_Name: Unity Perlin
   m_EditorClassIdentifier: 
   graph: {fileID: 11400000}
-  position: {x: -392, y: -56}
+  position: {x: -24, y: 136}
   ports:
     keys:
     - _value
@@ -73,7 +73,7 @@ MonoBehaviour:
       _typeConstraint: 0
       _dynamic: 0
   _value: 0
-  _frequency: {x: 0.1, y: 0.1}
+  _frequency: {x: 0.05, y: 0.05}
   _offset: {x: 1000, y: 1000}
   _amplitude: 10
 --- !u!114 &11400000
@@ -106,7 +106,7 @@ MonoBehaviour:
   m_Name: Height
   m_EditorClassIdentifier: 
   graph: {fileID: 11400000}
-  position: {x: -120, y: -56}
+  position: {x: 216, y: 136}
   ports:
     keys:
     - _height
@@ -121,7 +121,7 @@ MonoBehaviour:
         node: {fileID: -6446417917359774113}
         reroutePoints: []
       _direction: 0
-      _connectionType: 0
+      _connectionType: 1
       _typeConstraint: 0
       _dynamic: 0
     - _fieldName: _value
