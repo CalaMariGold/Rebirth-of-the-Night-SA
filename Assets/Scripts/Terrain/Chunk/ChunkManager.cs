@@ -178,6 +178,7 @@ namespace Rebirth.Terrain.Chunk
             }
             
             // Recycle old loaded chunk memory we no longer need
+            // TODO: Profile and consider capping number of chunks recycled per frame
             foreach (var chunkPos in LoadedChunks.Keys.Except(chunksToLoad).ToArray())
             {
                 var chunk = LoadedChunks[chunkPos];

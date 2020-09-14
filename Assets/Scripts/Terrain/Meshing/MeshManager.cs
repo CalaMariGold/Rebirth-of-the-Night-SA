@@ -75,6 +75,7 @@ namespace Rebirth.Terrain.Meshing
         /// <param name="chunkCount">Number of chunks to mesh.</param>
         private void MeshChunks(int chunkCount)
         {
+            // TODO: Profile and consider capping number of chunks meshed per frame
             chunkCount = System.Math.Min(chunkCount, _meshingQueue.Count);
 
             for (var i = 0; i < chunkCount; i++)
