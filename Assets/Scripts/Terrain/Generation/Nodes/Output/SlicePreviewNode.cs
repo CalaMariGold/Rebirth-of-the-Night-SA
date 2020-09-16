@@ -5,7 +5,7 @@ using XNode;
 namespace Rebirth.Terrain.Generation.Nodes
 {
     [CreateNodeMenu("Output/Slice Preview")]
-    public class SlicePreviewNode : Node
+    public class SlicePreviewNode : Node, IPreviewNode
     {
         [Input(ShowBackingValue.Never, ConnectionType.Override)]
         [SerializeField] private float _input;
@@ -28,11 +28,11 @@ namespace Rebirth.Terrain.Generation.Nodes
                 _parameters.PreviewSize.x, 
                 _parameters.PreviewSize.y
             );
+            var generator = GetInputValue<Generator<float>>(nameof(_input), _ => _input);
             for (var x = 0; x < texture.width; x++)
             {
                 for (var y = 0; y < texture.height; y++)
                 {
-                    var generator = GetInputValue<Generator<float>>(nameof(_input), _ => _input);
                     var value = generator(new Vector3Int(
                         x + _parameters.RootPosition.x,
                         _parameters.RootPosition.y,
