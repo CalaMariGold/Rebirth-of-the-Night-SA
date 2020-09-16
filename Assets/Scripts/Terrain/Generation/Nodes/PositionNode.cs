@@ -7,22 +7,22 @@ namespace Rebirth.Terrain.Generation.Nodes
     [NodeWidth(100)]
     public class PositionNode : Node
     {
-        [Output, SerializeField] public float _x;
-        [Output, SerializeField] public float _y;
-        [Output, SerializeField] public float _z;
+        [Output, SerializeField] public int _x;
+        [Output, SerializeField] public int _y;
+        [Output, SerializeField] public int _z;
 
         public override object GetValue(NodePort port)
         {
             switch (port.fieldName)
             {
                 case nameof(_x):
-                    return new Generator<float>(i => i.x);
+                    return new Generator<int>(i => i.x);
                 case nameof(_y):
-                    return new Generator<float>(i => i.y);
+                    return new Generator<int>(i => i.y);
                 case nameof(_z):
-                    return new Generator<float>(i => i.z);
+                    return new Generator<int>(i => i.z);
                 default:
-                    return new Generator<float>(_ => 0);
+                    return new Generator<int>(_ => 0);
             }
         }
     }

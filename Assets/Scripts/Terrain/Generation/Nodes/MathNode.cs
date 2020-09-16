@@ -24,7 +24,8 @@ namespace Rebirth.Terrain.Generation.Nodes
             Multiply,
             Divide,
             Max,
-            Min
+            Min,
+            Pow
         }
         protected override Generator<float> GetDelegate(NodePort port)
         {
@@ -49,6 +50,8 @@ namespace Rebirth.Terrain.Generation.Nodes
                     return Mathf.Max(input1, input2);
                 case MathOperation.Min:
                     return Mathf.Min(input1, input2);
+                case MathOperation.Pow:
+                    return Mathf.Pow(input1, input2);
                 default: return 0;
             }
         }
