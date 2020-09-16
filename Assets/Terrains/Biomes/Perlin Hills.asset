@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-7840961119315129456
+--- !u!114 &-8069248640362709894
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -13,26 +13,14 @@ MonoBehaviour:
   m_Name: Voxel Output
   m_EditorClassIdentifier: 
   graph: {fileID: 11400000}
-  position: {x: 488, y: 216}
+  position: {x: 488, y: 296}
   ports:
     keys:
-    - _voxelType
     - _distance
+    - _voxelType
     values:
-    - _fieldName: _voxelType
-      _node: {fileID: -7840961119315129456}
-      _typeQualifiedName: Rebirth.Terrain.Voxel.VoxelType, Assembly-CSharp, Version=0.0.0.0,
-        Culture=neutral, PublicKeyToken=null
-      connections:
-      - fieldName: _output
-        node: {fileID: -11899638967510481}
-        reroutePoints: []
-      _direction: 0
-      _connectionType: 1
-      _typeConstraint: 0
-      _dynamic: 0
     - _fieldName: _distance
-      _node: {fileID: -7840961119315129456}
+      _node: {fileID: -8069248640362709894}
       _typeQualifiedName: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
       connections:
@@ -43,8 +31,77 @@ MonoBehaviour:
       _connectionType: 1
       _typeConstraint: 0
       _dynamic: 0
+    - _fieldName: _voxelType
+      _node: {fileID: -8069248640362709894}
+      _typeQualifiedName: Rebirth.Terrain.Voxel.VoxelType, Assembly-CSharp, Version=0.0.0.0,
+        Culture=neutral, PublicKeyToken=null
+      connections:
+      - fieldName: _output
+        node: {fileID: 2889121644713738326}
+        reroutePoints: []
+      _direction: 0
+      _connectionType: 1
+      _typeConstraint: 0
+      _dynamic: 0
   _distance: 0
-  _voxelType: {fileID: 11400000, guid: 893cdb276c6fd0541bd5f479b9e81178, type: 2}
+  _voxelType: {fileID: 0}
+--- !u!114 &-6954572438600046129
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81909b81181d4f2cb8783b4f7d1b2051, type: 3}
+  m_Name: Int Comparison
+  m_EditorClassIdentifier: 
+  graph: {fileID: 11400000}
+  position: {x: -24, y: 344}
+  ports:
+    keys:
+    - _input1
+    - _input2
+    - _output
+    values:
+    - _fieldName: _input1
+      _node: {fileID: -6954572438600046129}
+      _typeQualifiedName: System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral,
+        PublicKeyToken=b77a5c561934e089
+      connections:
+      - fieldName: _y
+        node: {fileID: 8580141649895853853}
+        reroutePoints: []
+      _direction: 0
+      _connectionType: 1
+      _typeConstraint: 0
+      _dynamic: 0
+    - _fieldName: _input2
+      _node: {fileID: -6954572438600046129}
+      _typeQualifiedName: System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral,
+        PublicKeyToken=b77a5c561934e089
+      connections: []
+      _direction: 0
+      _connectionType: 1
+      _typeConstraint: 0
+      _dynamic: 0
+    - _fieldName: _output
+      _node: {fileID: -6954572438600046129}
+      _typeQualifiedName: System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral,
+        PublicKeyToken=b77a5c561934e089
+      connections:
+      - fieldName: _condition
+        node: {fileID: 2889121644713738326}
+        reroutePoints: []
+      _direction: 1
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+  _input1: 0
+  _operator: 2
+  _input2: 3
+  _output: 0
 --- !u!114 &-6446417917359774113
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -82,73 +139,6 @@ MonoBehaviour:
   _frequency: {x: 0.05, y: 0.05}
   _offset: {x: 1000, y: 1000}
   _amplitude: 10
---- !u!114 &-11899638967510481
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
-  m_Name: Conditional Voxel Type
-  m_EditorClassIdentifier: Assembly-CSharp:Rebirth.Terrain.Generation.Nodes:ConditionalVoxelTypeNode
-  graph: {fileID: 11400000}
-  position: {x: 216, y: 328}
-  ports:
-    keys:
-    - _trueValue
-    - _falseValue
-    - _output
-    - _condition
-    values:
-    - _fieldName: _trueValue
-      _node: {fileID: -11899638967510481}
-      _typeQualifiedName: Rebirth.Terrain.Voxel.VoxelType, Assembly-CSharp, Version=0.0.0.0,
-        Culture=neutral, PublicKeyToken=null
-      connections: []
-      _direction: 0
-      _connectionType: 1
-      _typeConstraint: 0
-      _dynamic: 0
-    - _fieldName: _falseValue
-      _node: {fileID: -11899638967510481}
-      _typeQualifiedName: Rebirth.Terrain.Voxel.VoxelType, Assembly-CSharp, Version=0.0.0.0,
-        Culture=neutral, PublicKeyToken=null
-      connections: []
-      _direction: 0
-      _connectionType: 1
-      _typeConstraint: 0
-      _dynamic: 0
-    - _fieldName: _output
-      _node: {fileID: -11899638967510481}
-      _typeQualifiedName: Rebirth.Terrain.Voxel.VoxelType, Assembly-CSharp, Version=0.0.0.0,
-        Culture=neutral, PublicKeyToken=null
-      connections:
-      - fieldName: _voxelType
-        node: {fileID: -7840961119315129456}
-        reroutePoints: []
-      _direction: 1
-      _connectionType: 0
-      _typeConstraint: 0
-      _dynamic: 0
-    - _fieldName: _condition
-      _node: {fileID: -11899638967510481}
-      _typeQualifiedName: System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral,
-        PublicKeyToken=b77a5c561934e089
-      connections:
-      - fieldName: _output
-        node: {fileID: 398716561134191025}
-        reroutePoints: []
-      _direction: 0
-      _connectionType: 1
-      _typeConstraint: 0
-      _dynamic: 0
-  _condition: 0
-  _trueValue: {fileID: 11400000, guid: 893cdb276c6fd0541bd5f479b9e81178, type: 2}
-  _falseValue: {fileID: 11400000, guid: c41646f6e7e99dd4ca673d81a3334749, type: 2}
-  _output: {fileID: 0}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -164,12 +154,12 @@ MonoBehaviour:
   nodes:
   - {fileID: -6446417917359774113}
   - {fileID: 376689480107554301}
-  - {fileID: -7840961119315129456}
   - {fileID: 4131109691722826717}
-  - {fileID: 4453548614340589119}
-  - {fileID: 398716561134191025}
-  - {fileID: -11899638967510481}
-  _outputNode: {fileID: -7840961119315129456}
+  - {fileID: -8069248640362709894}
+  - {fileID: 8580141649895853853}
+  - {fileID: 2889121644713738326}
+  - {fileID: -6954572438600046129}
+  _outputNode: {fileID: -8069248640362709894}
 --- !u!114 &376689480107554301
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -183,7 +173,7 @@ MonoBehaviour:
   m_Name: Height
   m_EditorClassIdentifier: 
   graph: {fileID: 11400000}
-  position: {x: 216, y: 200}
+  position: {x: 232, y: 200}
   ports:
     keys:
     - _height
@@ -207,7 +197,7 @@ MonoBehaviour:
         PublicKeyToken=b77a5c561934e089
       connections:
       - fieldName: _distance
-        node: {fileID: -7840961119315129456}
+        node: {fileID: -8069248640362709894}
         reroutePoints: []
       _direction: 1
       _connectionType: 0
@@ -216,7 +206,7 @@ MonoBehaviour:
   _height: 0
   _value: 0
   _baseHeight: 0
---- !u!114 &398716561134191025
+--- !u!114 &2889121644713738326
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -225,54 +215,64 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
-  m_Name: Int Comparison
-  m_EditorClassIdentifier: Assembly-CSharp:Rebirth.Terrain.Generation.Nodes:IntComparisonNode
+  m_Script: {fileID: 11500000, guid: bf441ca8c82b4463adbd4541e6271efc, type: 3}
+  m_Name: Conditional Voxel Type
+  m_EditorClassIdentifier: 
   graph: {fileID: 11400000}
-  position: {x: -24, y: 328}
+  position: {x: 232, y: 344}
   ports:
     keys:
-    - _input1
-    - _input2
+    - _condition
+    - _trueValue
+    - _falseValue
     - _output
     values:
-    - _fieldName: _input1
-      _node: {fileID: 398716561134191025}
-      _typeQualifiedName: System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral,
+    - _fieldName: _condition
+      _node: {fileID: 2889121644713738326}
+      _typeQualifiedName: System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
       connections:
-      - fieldName: _y
-        node: {fileID: 4453548614340589119}
+      - fieldName: _output
+        node: {fileID: -6954572438600046129}
         reroutePoints: []
       _direction: 0
       _connectionType: 1
       _typeConstraint: 0
       _dynamic: 0
-    - _fieldName: _input2
-      _node: {fileID: 398716561134191025}
-      _typeQualifiedName: System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral,
-        PublicKeyToken=b77a5c561934e089
+    - _fieldName: _trueValue
+      _node: {fileID: 2889121644713738326}
+      _typeQualifiedName: Rebirth.Terrain.Voxel.VoxelType, Assembly-CSharp, Version=0.0.0.0,
+        Culture=neutral, PublicKeyToken=null
+      connections: []
+      _direction: 0
+      _connectionType: 1
+      _typeConstraint: 0
+      _dynamic: 0
+    - _fieldName: _falseValue
+      _node: {fileID: 2889121644713738326}
+      _typeQualifiedName: Rebirth.Terrain.Voxel.VoxelType, Assembly-CSharp, Version=0.0.0.0,
+        Culture=neutral, PublicKeyToken=null
       connections: []
       _direction: 0
       _connectionType: 1
       _typeConstraint: 0
       _dynamic: 0
     - _fieldName: _output
-      _node: {fileID: 398716561134191025}
-      _typeQualifiedName: System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral,
-        PublicKeyToken=b77a5c561934e089
+      _node: {fileID: 2889121644713738326}
+      _typeQualifiedName: Rebirth.Terrain.Voxel.VoxelType, Assembly-CSharp, Version=0.0.0.0,
+        Culture=neutral, PublicKeyToken=null
       connections:
-      - fieldName: _condition
-        node: {fileID: -11899638967510481}
+      - fieldName: _voxelType
+        node: {fileID: -8069248640362709894}
         reroutePoints: []
       _direction: 1
       _connectionType: 0
       _typeConstraint: 0
       _dynamic: 0
-  _input1: 0
-  _operator: 2
-  _input2: 3
-  _output: 0
+  _condition: 0
+  _trueValue: {fileID: 11400000, guid: 893cdb276c6fd0541bd5f479b9e81178, type: 2}
+  _falseValue: {fileID: 11400000, guid: c41646f6e7e99dd4ca673d81a3334749, type: 2}
+  _output: {fileID: 0}
 --- !u!114 &4131109691722826717
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -309,7 +309,7 @@ MonoBehaviour:
     WhitePoint: 10
     PreviewSize: {x: 64, y: 64}
     RootPosition: {x: 0, y: 0, z: 0}
---- !u!114 &4453548614340589119
+--- !u!114 &8580141649895853853
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -322,7 +322,7 @@ MonoBehaviour:
   m_Name: Position
   m_EditorClassIdentifier: 
   graph: {fileID: 11400000}
-  position: {x: -152, y: 328}
+  position: {x: -152, y: 344}
   ports:
     keys:
     - _x
@@ -330,7 +330,7 @@ MonoBehaviour:
     - _z
     values:
     - _fieldName: _x
-      _node: {fileID: 4453548614340589119}
+      _node: {fileID: 8580141649895853853}
       _typeQualifiedName: System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
       connections: []
@@ -339,19 +339,19 @@ MonoBehaviour:
       _typeConstraint: 0
       _dynamic: 0
     - _fieldName: _y
-      _node: {fileID: 4453548614340589119}
+      _node: {fileID: 8580141649895853853}
       _typeQualifiedName: System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
       connections:
       - fieldName: _input1
-        node: {fileID: 398716561134191025}
+        node: {fileID: -6954572438600046129}
         reroutePoints: []
       _direction: 1
       _connectionType: 0
       _typeConstraint: 0
       _dynamic: 0
     - _fieldName: _z
-      _node: {fileID: 4453548614340589119}
+      _node: {fileID: 8580141649895853853}
       _typeQualifiedName: System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
       connections: []
@@ -362,60 +362,3 @@ MonoBehaviour:
   _x: 0
   _y: 0
   _z: 0
---- !u!114 &7707954039067245129
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4c1e92952d824233967752f073799751, type: 3}
-  m_Name: Comparison
-  m_EditorClassIdentifier: 
-  graph: {fileID: 11400000}
-  position: {x: -24, y: 312}
-  ports:
-    keys:
-    - _input1
-    - _input2
-    - _output
-    values:
-    - _fieldName: _input1
-      _node: {fileID: 7707954039067245129}
-      _typeQualifiedName: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
-        PublicKeyToken=b77a5c561934e089
-      connections:
-      - fieldName: _y
-        node: {fileID: 4453548614340589119}
-        reroutePoints: []
-      _direction: 0
-      _connectionType: 1
-      _typeConstraint: 0
-      _dynamic: 0
-    - _fieldName: _input2
-      _node: {fileID: 7707954039067245129}
-      _typeQualifiedName: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
-        PublicKeyToken=b77a5c561934e089
-      connections: []
-      _direction: 0
-      _connectionType: 1
-      _typeConstraint: 0
-      _dynamic: 0
-    - _fieldName: _output
-      _node: {fileID: 7707954039067245129}
-      _typeQualifiedName: System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral,
-        PublicKeyToken=b77a5c561934e089
-      connections:
-      - fieldName: _condition
-        node: {fileID: -11899638967510481}
-        reroutePoints: []
-      _direction: 1
-      _connectionType: 0
-      _typeConstraint: 0
-      _dynamic: 0
-  _input1: 0
-  _operator: 2
-  _input2: 3
-  _output: 0

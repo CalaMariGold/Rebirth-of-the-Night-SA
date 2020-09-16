@@ -1,22 +1,24 @@
 using System;
-using Rebirth.Terrain.Voxel;
 using UnityEngine;
 using XNode;
 
 namespace Rebirth.Terrain.Generation.Nodes
 {
-    public class ConditionalNode<T> : Node
+    public abstract class ConditionalNode<T> : Node
     {
         [Input(connectionType: ConnectionType.Override)]
         [SerializeField] private bool _condition;
 
         [Input(connectionType: ConnectionType.Override)]
-        [SerializeField] protected T _trueValue;
         
-        [Input(connectionType: ConnectionType.Override)]
-        [SerializeField] protected T _falseValue;
+#pragma warning disable 649
+        [SerializeField] private T _trueValue;
 
-        [Output, SerializeField] protected T _output;
+        [Input(connectionType: ConnectionType.Override)]
+        [SerializeField] private T _falseValue;
+#pragma warning restore 649
+        
+        [Output, SerializeField] private T _output;
         
         public sealed override object GetValue(NodePort port)
         {
@@ -25,15 +27,5 @@ namespace Rebirth.Terrain.Generation.Nodes
             var falseValue = GetInputValue<Generator<T>>(nameof(_falseValue), _ => _falseValue);
             return new Generator<T>(i => condition(i) ? trueValue(i) : falseValue(i));
         }
-    }
-
-    [CreateNodeMenu("Control Flow/Conditional (Float)")]
-    public class ConditionalFloatNode : ConditionalNode<float>
-    {
-    }
-
-    [CreateNodeMenu("Control Flow/Conditional (Voxel Type)")]
-    public class ConditionalVoxelTypeNode : ConditionalNode<VoxelType>
-    {
     }
 }

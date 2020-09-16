@@ -1,3 +1,4 @@
+using System.Linq;
 using Rebirth.Terrain.Generation.Nodes;
 using Rebirth.Terrain.Voxel;
 using UnityEngine;
@@ -12,6 +13,10 @@ namespace Rebirth.Terrain.Generation
 
         public Generator<VoxelInfo> GetValue()
         {
+            if (_outputNode == null)
+            {
+                _outputNode = nodes.OfType<VoxelOutputNode>().First();
+            }
             return _outputNode.GetValue();
         }
     }
