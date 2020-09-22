@@ -9,7 +9,7 @@ namespace Rebirth.Terrain.Meshing
     public class MeshManager : MonoBehaviour
     {
         [SerializeField] private ComputeShader _computeShader;
-        [SerializeField] private GameObject _chunkPrefab;
+        [SerializeField] private MeshHolder _chunkPrefab;
         
         // Mesh Generator for DI
         private IMeshGenerator _meshGenerator;
@@ -173,7 +173,6 @@ namespace Rebirth.Terrain.Meshing
             {
                 // Recycle a GameObject
                 meshHolder = _recyclableChunks.Dequeue();
-                meshHolder.gameObject.name = holderName;
                 meshHolder.transform.position = position;
             }
             else
@@ -182,14 +181,12 @@ namespace Rebirth.Terrain.Meshing
                 // var chunkHolderGameObject = new GameObject(holderName);
                 // var meshFilter = chunkHolderGameObject.AddComponent<MeshFilter>();
                 // var meshRenderer = chunkHolderGameObject.AddComponent<MeshRenderer>();
-                var chunkHolderGameObject = Instantiate(
+                meshHolder = Instantiate(
                     _chunkPrefab, position,
                     Quaternion.identity, transform
                 );
-                chunkHolderGameObject.name = holderName;
-                meshHolder = chunkHolderGameObject.GetComponent<MeshHolder>();
             }
-
+            meshHolder.gameObject.name = holderName;
             meshHolder.Mesh = mesh;
             _meshHolders.Add(chunkLocation, meshHolder);
         }

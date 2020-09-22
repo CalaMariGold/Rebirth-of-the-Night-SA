@@ -429,7 +429,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _computeShader: {fileID: 7200000, guid: 6b03332e2f21b14449e610b80dfadd14, type: 3}
-  _chunkPrefab: {fileID: 7379830274175367647, guid: 6f1f709e3b954a54db166839c70649e1, type: 3}
+  _chunkPrefab: {fileID: 7982669846641334091, guid: 6f1f709e3b954a54db166839c70649e1, type: 3}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
