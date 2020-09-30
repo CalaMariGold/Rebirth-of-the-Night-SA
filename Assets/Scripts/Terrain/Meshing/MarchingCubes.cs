@@ -65,7 +65,7 @@ namespace Rebirth.Terrain.Meshing
             // Fill buffers
             computeShader.SetBuffer(0, "chunkPoints", _pointBuffer);
             computeShader.SetBuffer(0, "triangles", _triangleBuffer);
-            
+
             _pointBuffer.SetData(CalcDistanceArray(chunkLocation, chunks));
 
             // Update shader params
@@ -133,16 +133,23 @@ namespace Rebirth.Terrain.Meshing
         private VoxelComputeInfo[] CalcDistanceArray(Vector3Int chunkLocation,
             IDictionary<Vector3Int, IChunk> chunks)
         {
-            // Initial chunk
+            // Initial chunk - assumes cubic chunk
             var chunk = chunks[chunkLocation];
             var width = chunk.Width + 1;
             var height = chunk.Height + 1;
             var depth = chunk.Depth + 1;
-            var computeInfo = new VoxelComputeInfo[width * height * depth];
+
+            var shiftAmount = (int) Mathf.Log(width, 2);
+
+            var computeInfo = new VoxelComputeInfo[width * depth * height];
+
             // NOTE: IEnumerable used because it should be cheaper than indexed access on an octree.
             foreach (var item in chunk)
             {
-                var index = item.Key.z * width * height + item.Key.y * width + item.Key.x;
+                var index = (item.Key.z << shiftAmount + shiftAmount) 
+                    + (item.Key.y << shiftAmount)
+                    + (item.Key.z << shiftAmount + 1)
+                    + (item.Key.z + item.Key.y + item.Key.x);
                 computeInfo[index] = item.Value.ToCompute();
             }
 
@@ -154,15 +161,27 @@ namespace Rebirth.Terrain.Meshing
                 var otherLocation = chunkLocation + otherChunkVector;
                 var found = chunks.TryGetValue(otherLocation, out var otherChunk);
 
-                for (var x = 0; x <= (chunk.Width - 1) * (1 - otherChunkVector.x); x++)
+                var voxelOffset = new Vector3Int(
+                    otherChunkVector.x * chunk.Depth,
+                    otherChunkVector.y * chunk.Height,
+                    otherChunkVector.z * chunk.Width);
+
+                var limits = new Vector3Int(
+                    (chunk.Width - 1) * (1 - otherChunkVector.x),
+                    (chunk.Height - 1) * (1 - otherChunkVector.y),
+                    (chunk.Depth - 1) * (1 - otherChunkVector.z));
+
+                for (var x = 0; x <= limits.x; x++)
                 {
-                    for (var y = 0; y <= (chunk.Height - 1) * (1 - otherChunkVector.y); y++)
+                    for (var y = 0; y <= limits.y; y++)
                     {
-                        for (var z = 0; z <= (chunk.Depth - 1) * (1 - otherChunkVector.z); z++)
+                        for (var z = 0; z <= limits.z; z++)
                         {
-                            var index = ((otherChunkVector.z * chunk.Width + z) * width * height) +
-                                        ((otherChunkVector.y * chunk.Height + y) * width) +
-                                        (otherChunkVector.x * chunk.Depth + x);
+                            var index = (voxelOffset.z << shiftAmount + shiftAmount) 
+                                + (voxelOffset.y << shiftAmount)
+                                + (voxelOffset.z << shiftAmount + 1)
+                                + (voxelOffset.z + voxelOffset.y + voxelOffset.x);
+
                             if (found)
                             {
                                 computeInfo[index] = otherChunk[x, y, z].ToCompute();
