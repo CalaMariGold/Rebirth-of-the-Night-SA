@@ -18,20 +18,39 @@ namespace Rebirth.Terrain.Chunk
         
         [SerializeField] private Transform _chunkLoadingTarget;
         [SerializeField] private int _chunkSize;
-        [SerializeField] private int _chunkLoadDistance;
-        
+
+        // HACK: exists to expose _chunkLoadDistance to editor
+        [SerializeField] private int _newChunkLoadDistance;
+
+        private int _chunkLoadDistance;
+
+        public int ChunkLoadDistance
+        {
+            get => _chunkLoadDistance;
+            set => SetChunkLoadDistance(value);
+        }
+
+        // Set of all offset vectors that correlate to _chunkLoadDistance
+        private List<Vector3Int> _chunkLoadingOffsets;
+
         // Which chunks are we waiting for load
         private HashSet<Vector3Int> _loadingChunks;
+
         // Freshly loaded chunks to be consumed by the main thread into _loadedChunks on update
         private ConcurrentQueue<(Vector3Int, IChunk)> _freshChunks;
+
         // Chunk load queue consumed by the load thread
         private BlockingCollection<Vector3Int> _chunksToLoad;
+
         // Recyclable chunks which can be reused to save memory
         private ConcurrentBag<IChunk> _recyclableChunks;
+
         // Chunk creation function for DI
         private Func<int, int, int, IChunk> _chunkFactory;
+
         // Chunk loader for DI
         private IChunkLoader _chunkLoader;
+
         // Provides a token used to cancel the asynchronous load task
         private CancellationTokenSource _tokenSource;
         
@@ -48,23 +67,24 @@ namespace Rebirth.Terrain.Chunk
         /// <param name="chunkFactory">
         /// A function which produces an <see cref="IChunk"/> for a given location.
         /// </param>
-        /// <param name="chunkLoader">
-        /// An <see cref="IChunkLoader"/> which will be used to fill chunks.
-        /// </param>
-        public void Setup(Func<int, int, int, IChunk> chunkFactory, IChunkLoader chunkLoader)
+        public void Setup(Func<int, int, int, IChunk> chunkFactory)
         {
+            // TODO: replace with component-based system
             _chunkFactory = chunkFactory;
-            _chunkLoader = chunkLoader;
         }
 
         private void Awake()
         {
+            Debug.Log("Initializing Chunk Manager");
             // Create required objects and collections for Async chunk loads
             LoadedChunks = new Dictionary<Vector3Int, IChunk>();
+            _chunkLoadingOffsets = new List<Vector3Int>();
             _loadingChunks = new HashSet<Vector3Int>();
             _freshChunks = new ConcurrentQueue<(Vector3Int, IChunk)>();
             _chunksToLoad = new BlockingCollection<Vector3Int>(new ConcurrentQueue<Vector3Int>());
             _recyclableChunks = new ConcurrentBag<IChunk>();
+            // Get required components
+            _chunkLoader = GetComponent<IChunkLoader>();
         }
 
         private void OnEnable()
@@ -147,26 +167,18 @@ namespace Rebirth.Terrain.Chunk
         {
             var chunksToLoad = new HashSet<Vector3Int>();
             var currentChunk = Vector3Int.FloorToInt(_chunkLoadingTarget.position / _chunkSize);
-            // Get the set of chunks we want loaded this frame
-            for (var x = -_chunkLoadDistance; x <= _chunkLoadDistance; x++)
-            {
-                for (var y = -_chunkLoadDistance; y <= _chunkLoadDistance; y++)
-                {
-                    for (var z = -_chunkLoadDistance; z <= _chunkLoadDistance; z++)
-                    {
-                        var coord = new Vector3Int(x, y, z);
-                        // Ignore chunks outside rendering sphere
-                        if (coord.magnitude > _chunkLoadDistance)
-                        {
-                            continue;
-                        }
 
-                        chunksToLoad.Add(coord + currentChunk);
-                    }
-                }
+            // HACK: Allows setting chunk load distance from editor
+            ChunkLoadDistance = _newChunkLoadDistance;
+
+            // Gets list of chunks to be loaded this frame from the center, out
+            foreach (var offset in _chunkLoadingOffsets)
+            {
+                chunksToLoad.Add(currentChunk + offset);
             }
             
             // Recycle old loaded chunk memory we no longer need
+            // TODO: Profile and consider capping number of chunks recycled per frame
             foreach (var chunkPos in LoadedChunks.Keys.Except(chunksToLoad).ToArray())
             {
                 var chunk = LoadedChunks[chunkPos];
@@ -185,6 +197,55 @@ namespace Rebirth.Terrain.Chunk
                 _loadingChunks.Add(chunkPos);
                 _chunksToLoad.Add(chunkPos);
             }
+        }
+
+        /// <summary>
+        /// Sets chunkload distance, populates _chunkLoadingOffsets and _chunkPreloadingOffsets.
+        /// </summary>
+        private void SetChunkLoadDistance(int value)
+        {
+            if(value == _chunkLoadDistance || value < 0)
+            {
+                return;
+            } else if (value < _chunkLoadDistance) {
+                _chunkLoadingOffsets.RemoveAll(a => a.magnitude >= value);
+                _chunkLoadDistance = value;
+                return;
+            }
+
+            _chunkLoadingOffsets.Clear();
+
+            var bound = value - 1;
+            var valueSquared = value * value;
+            
+            // Scans all chunks in cuboid of edge length 2n+1
+            for (var x = -bound; x <= bound; x++)
+            {
+                for (var y = -bound; y <= bound; y++)
+                {
+                    // Verifies that chunk is within circle
+                    if (x * x + y * y > valueSquared)
+                    {
+                        continue;
+                    }
+
+                    for (var z = -bound; z <= bound; z++)
+                    {
+                        // Verifies that chunk is within sphere
+                        if (x * x + y * y + z * z > valueSquared)
+                        {
+                            continue;
+                        }
+
+                        _chunkLoadingOffsets.Add(new Vector3Int(x, y, z));
+                    }
+                }
+            }
+
+            // Sorts by distance from center
+            _chunkLoadingOffsets.Sort((a, b) => a.magnitude.CompareTo(b.magnitude));
+
+            _chunkLoadDistance = value;
         }
 
         private void OnDrawGizmosSelected()

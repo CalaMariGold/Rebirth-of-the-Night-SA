@@ -10,31 +10,42 @@ namespace Rebirth.Terrain.Meshing
     /// <summary>
     /// Provides Unity meshes for voxel chunks using the Marching Cubes algorithm.
     /// </summary>
-    public class MarchingCubes : IMeshGenerator
+    public class MarchingCubes : MonoBehaviour, IMeshGenerator
     {
+        [SerializeField] private ComputeShader _computeShader;
+        
         private const int _threadGroupSize = 8;
         private ComputeBuffer _pointBuffer;
         private ComputeBuffer _triangleBuffer;
         private ComputeBuffer _triCountBuffer;
+
+        // Offsets for a chunk's neighbors, required for meshing edges
+        private List<Vector3Int> _chunkNeighborOffsets = new List<Vector3Int>();
+
+        public void Awake()
+        {
+            for (var i = 0; i < 8; i++)
+            {
+                _chunkNeighborOffsets.Add(new Vector3Int((i & 1), ((i >> 1) & 1), ((i >> 2) & 1)));
+            }
+        }
 
         /// <summary>
         /// Generates a mesh from the data in an <seealso cref="IChunk"/>.
         /// </summary>
         /// <param name="chunkLocation">The location of the chunk to mesh.</param>
         /// <param name="chunks">The loaded chunks to use in mesh generation.</param>
-        /// <param name="computeShader">The compute shader to use when generating the mesh.</param>
-        /// <returns>A Unity mesh which can be added to a scene.</returns>
+        /// <param name="mesh">A Unity mesh which can be added to a scene.</param>
         /// <remarks>Based on Sebastian Lague's compute shader implementation.</remarks>
-        public Mesh GenerateMesh(Vector3Int chunkLocation,
+        public void GenerateMesh(Vector3Int chunkLocation,
             IDictionary<Vector3Int, IChunk> chunks,
-            ComputeShader computeShader)
+            ref Mesh mesh)
         {
             // Do we need to check if chunkLocation is in chunks?
             var chunk = chunks[chunkLocation];
             CreateBuffers(chunk);
-            var mesh = CreateChunkMesh(chunkLocation, chunks, computeShader);
+            CreateChunkMesh(chunkLocation, chunks, _computeShader, ref mesh);
             ReleaseBuffers();
-            return mesh;
         }
 
         /// <summary>
@@ -44,16 +55,17 @@ namespace Rebirth.Terrain.Meshing
         /// <param name="chunkLocation">The location of the chunk to mesh.</param>
         /// <param name="chunks">The loaded chunks to use in mesh generation.</param>
         /// <param name="computeShader">The compute shader to use when generating the mesh.</param>
-        /// <returns>A Unity mesh which can be added to a scene.</returns>
-        private Mesh CreateChunkMesh(Vector3Int chunkLocation,
+        /// <param name="mesh">The Unity mesh which can be added to a scene.</param>
+        private void CreateChunkMesh(Vector3Int chunkLocation,
             IDictionary<Vector3Int, IChunk> chunks,
-            ComputeShader computeShader)
+            ComputeShader computeShader,
+            ref Mesh mesh)
         {
             var chunk = chunks[chunkLocation];
             // Fill buffers
             computeShader.SetBuffer(0, "chunkPoints", _pointBuffer);
             computeShader.SetBuffer(0, "triangles", _triangleBuffer);
-            
+
             _pointBuffer.SetData(CalcDistanceArray(chunkLocation, chunks));
 
             // Update shader params
@@ -91,12 +103,20 @@ namespace Rebirth.Terrain.Meshing
                 }
             }
 
-            return new Mesh
+            if(mesh != null)
             {
-                vertices = vertices,
-                colors = colours,
-                triangles = Enumerable.Range(0, vertices.Length).ToArray()
-            };
+                mesh.vertices = vertices;
+                mesh.colors = colours;
+                mesh.triangles = Enumerable.Range(0, vertices.Length).ToArray();
+            } else
+            {
+                mesh = new Mesh()
+                {
+                    vertices = vertices,
+                    colors = colours,
+                    triangles = Enumerable.Range(0, vertices.Length).ToArray()
+                };
+            } 
         }
 
         /// <summary>
@@ -110,47 +130,59 @@ namespace Rebirth.Terrain.Meshing
         /// <param name="chunkLocation">The location of the chunk.</param>
         /// <param name="chunks">The loaded chunks.</param>
         /// <returns>The 1-D array holding the compute data.</returns>
-        private static VoxelComputeInfo[] CalcDistanceArray(Vector3Int chunkLocation,
+        private VoxelComputeInfo[] CalcDistanceArray(Vector3Int chunkLocation,
             IDictionary<Vector3Int, IChunk> chunks)
         {
-            // Initial chunk
+            // Initial chunk - assumes cubic chunk
             var chunk = chunks[chunkLocation];
             var width = chunk.Width + 1;
             var height = chunk.Height + 1;
             var depth = chunk.Depth + 1;
-            var computeInfo = new VoxelComputeInfo[width * height * depth];
+
+            var shiftAmount = (int) Mathf.Log(width, 2);
+
+            var computeInfo = new VoxelComputeInfo[width * depth * height];
+
             // NOTE: IEnumerable used because it should be cheaper than indexed access on an octree.
             foreach (var item in chunk)
             {
-                var index = item.Key.z * width * height + item.Key.y * width + item.Key.x;
+                var index = (item.Key.z << shiftAmount + shiftAmount) 
+                    + (item.Key.y << shiftAmount)
+                    + (item.Key.z << shiftAmount + 1)
+                    + (item.Key.z + item.Key.y + item.Key.x);
                 computeInfo[index] = item.Value.ToCompute();
             }
 
             // Side faces, edges, corner
             // NOTE: This whole section is very janky and could do with a refactor
-            var otherChunks = new[] {
-                new Vector3Int(1, 0, 0),
-                new Vector3Int(0, 1, 0),
-                new Vector3Int(0,0, 1),
-                new Vector3Int(1, 1, 0),
-                new Vector3Int(0, 1, 1),
-                new Vector3Int(1, 0, 1),
-                new Vector3Int(1,1, 1) 
-            };
-            
-            foreach (var otherChunkVector in otherChunks)
+            for (var i = 1; i < 8; i++)
             {
+                var otherChunkVector = _chunkNeighborOffsets[i];
                 var otherLocation = chunkLocation + otherChunkVector;
                 var found = chunks.TryGetValue(otherLocation, out var otherChunk);
-                for (var x = 0; x <= (chunk.Width - 1) * (1 - otherChunkVector.x); x++)
+
+                var voxelOffset = new Vector3Int(
+                    otherChunkVector.x * chunk.Depth,
+                    otherChunkVector.y * chunk.Height,
+                    otherChunkVector.z * chunk.Width);
+
+                var limits = new Vector3Int(
+                    (chunk.Width - 1) * (1 - otherChunkVector.x),
+                    (chunk.Height - 1) * (1 - otherChunkVector.y),
+                    (chunk.Depth - 1) * (1 - otherChunkVector.z));
+
+                for (var x = 0; x <= limits.x; x++)
                 {
-                    for (var y = 0; y <= (chunk.Height - 1) * (1 - otherChunkVector.y); y++)
+                    for (var y = 0; y <= limits.y; y++)
                     {
-                        for (var z = 0; z <= (chunk.Depth - 1) * (1 - otherChunkVector.z); z++)
+                        for (var z = 0; z <= limits.z; z++)
                         {
-                            var index = ((otherChunkVector.z * chunk.Width + z) * width * height) +
-                                        ((otherChunkVector.y * chunk.Height + y) * width) +
-                                        (otherChunkVector.x * chunk.Depth + x);
+                            var adjustedOffset = voxelOffset + new Vector3Int(x, y, z);
+                            var index = (adjustedOffset.z << shiftAmount + shiftAmount) 
+                                + (adjustedOffset.y << shiftAmount)
+                                + (adjustedOffset.z << shiftAmount + 1)
+                                + (adjustedOffset.z + adjustedOffset.y + adjustedOffset.x);
+
                             if (found)
                             {
                                 computeInfo[index] = otherChunk[x, y, z].ToCompute();
@@ -163,11 +195,11 @@ namespace Rebirth.Terrain.Meshing
                                     Distance = 1.0f
                                 };
                             }
-                            
                         }
                     }
                 }
             }
+
             return computeInfo;
         }
 
@@ -188,8 +220,7 @@ namespace Rebirth.Terrain.Meshing
             // Ensures that correct values are read from the buffer
             _triangleBuffer.SetCounterValue(0);
         }
-
-        // NOTE: not a MonoBehaviour, so this will need to be called by the owning behaviour
+        
         public void OnDestroy()
         {
             if (Application.isPlaying)

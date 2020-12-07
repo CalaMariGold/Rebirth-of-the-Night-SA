@@ -287,6 +287,7 @@ GameObject:
   - component: {fileID: 764674788}
   - component: {fileID: 764674789}
   - component: {fileID: 764674787}
+  - component: {fileID: 764674790}
   m_Layer: 0
   m_Name: Single Chunk Viewer
   m_TagString: Untagged
@@ -316,7 +317,6 @@ MonoBehaviour:
   _amplitude: 20
   _texture: {fileID: 2800000, guid: 0f1758d235090ac4a9bc3ccc504df391, type: 3}
   _material: {fileID: 2100000, guid: 8d63fba1a1c0b6941a510caf46d9a982, type: 2}
-  _computeShader: {fileID: 7200000, guid: 6b03332e2f21b14449e610b80dfadd14, type: 3}
   _autoUpdateInEditor: 0
 --- !u!4 &764674788
 Transform:
@@ -354,6 +354,19 @@ MonoBehaviour:
   - _id: 2
     _color: {r: 0.8396226, g: 0.8396226, b: 0.8396226, a: 1}
     _name: Snow
+--- !u!114 &764674790
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 764674786}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 992f9325990247bcacd2f91f9b5b1990, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _computeShader: {fileID: 7200000, guid: 6b03332e2f21b14449e610b80dfadd14, type: 3}
 --- !u!1 &813522794
 GameObject:
   m_ObjectHideFlags: 0
@@ -366,6 +379,7 @@ GameObject:
   - component: {fileID: 813522795}
   - component: {fileID: 813522798}
   - component: {fileID: 813522797}
+  - component: {fileID: 813522799}
   m_Layer: 0
   m_Name: Terrain Manager
   m_TagString: Untagged
@@ -387,7 +401,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _chunkLoadingTarget: {fileID: 1210321432}
   _chunkSize: 32
-  _chunkLoadDistance: 3
+  _newChunkLoadDistance: 3
 --- !u!4 &813522796
 Transform:
   m_ObjectHideFlags: 0
@@ -428,8 +442,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafc4f452fe9421da1883d7795fc6c33, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _computeShader: {fileID: 7200000, guid: 6b03332e2f21b14449e610b80dfadd14, type: 3}
   _material: {fileID: 2100000, guid: 8d63fba1a1c0b6941a510caf46d9a982, type: 2}
+--- !u!114 &813522799
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 813522794}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 992f9325990247bcacd2f91f9b5b1990, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _computeShader: {fileID: 7200000, guid: 6b03332e2f21b14449e610b80dfadd14, type: 3}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0

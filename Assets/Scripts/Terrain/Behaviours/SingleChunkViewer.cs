@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Rebirth.Terrain.Chunk;
@@ -25,7 +24,6 @@ namespace Rebirth.Terrain.Behaviours
         [SerializeField] private float _amplitude;
         [SerializeField] private Texture2D _texture;
         [SerializeField] private Material _material;
-        [SerializeField] private ComputeShader _computeShader;
         [SerializeField] private bool _autoUpdateInEditor;
 
         private bool _settingsUpdated;
@@ -35,11 +33,12 @@ namespace Rebirth.Terrain.Behaviours
             new Dictionary<Vector3Int, IChunk>();
         private GameObject _meshHolder;
         private IVoxelProvider _voxelProvider;
-        private MarchingCubes _meshGenerator;
+        private IMeshGenerator _meshGenerator;
         private VoxelTypeRepository _voxelTypeRepository;
 
         private void Awake()
         {
+            _meshGenerator = GetComponent<IMeshGenerator>();
             _voxelTypeRepository = GetComponent<VoxelTypeRepository>();
         }
 
@@ -64,13 +63,12 @@ namespace Rebirth.Terrain.Behaviours
             _settingsUpdated = true;
         }
 
-        private void OnDestroy()
-        {
-            _meshGenerator?.OnDestroy();
-        }
-
         private void Run()
         {
+            if (_meshGenerator == null)
+            {
+                return;
+            }
             // Uses a simple implementation of IVoxelProvider, to be replaced later
             _voxelProvider = new HeightMapVoxelProvider
             {
@@ -91,10 +89,6 @@ namespace Rebirth.Terrain.Behaviours
                 _chunkOffset.x, _chunkOffset.y, _chunkOffset.z);
             _chunk.Load(_voxelProvider);
             _chunkDictionary[Vector3Int.zero] = _chunk;
-            if (_meshGenerator == null)
-            {
-                _meshGenerator = new MarchingCubes();
-            }
             if (_meshHolder == null)
             {
                 for (var i = 0; i < transform.childCount; i++)
@@ -105,9 +99,12 @@ namespace Rebirth.Terrain.Behaviours
                 _meshHolder = new GameObject("Chunk Mesh");
                 _meshHolder.transform.SetParent(transform);
                 var meshFilter = _meshHolder.AddComponent<MeshFilter>();
-                meshFilter.sharedMesh = _meshGenerator.GenerateMesh(
-                    Vector3Int.zero, _chunkDictionary, _computeShader
+                Mesh mesh = null;
+                _meshGenerator.GenerateMesh(
+                    Vector3Int.zero, _chunkDictionary,
+                    ref mesh
                 );
+                meshFilter.sharedMesh = mesh;
                 meshFilter.sharedMesh.RecalculateNormals();
                 var meshRenderer = _meshHolder.AddComponent<MeshRenderer>();
                 meshRenderer.sharedMaterial = _material;
@@ -115,8 +112,10 @@ namespace Rebirth.Terrain.Behaviours
             else
             {
                 var meshFilter = _meshHolder.GetComponent<MeshFilter>();
-                meshFilter.sharedMesh = _meshGenerator.GenerateMesh(
-                    Vector3Int.zero, _chunkDictionary, _computeShader
+                var mesh = meshFilter.sharedMesh;
+                _meshGenerator.GenerateMesh(
+                    Vector3Int.zero, _chunkDictionary,
+                    ref mesh
                 );
                 meshFilter.sharedMesh.RecalculateNormals();
             }
