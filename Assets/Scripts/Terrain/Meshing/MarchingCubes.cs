@@ -177,10 +177,11 @@ namespace Rebirth.Terrain.Meshing
                     {
                         for (var z = 0; z <= limits.z; z++)
                         {
-                            var index = (voxelOffset.z << shiftAmount + shiftAmount) 
-                                + (voxelOffset.y << shiftAmount)
-                                + (voxelOffset.z << shiftAmount + 1)
-                                + (voxelOffset.z + voxelOffset.y + voxelOffset.x);
+                            var adjustedOffset = voxelOffset + new Vector3Int(x, y, z);
+                            var index = (adjustedOffset.z << shiftAmount + shiftAmount) 
+                                + (adjustedOffset.y << shiftAmount)
+                                + (adjustedOffset.z << shiftAmount + 1)
+                                + (adjustedOffset.z + adjustedOffset.y + adjustedOffset.x);
 
                             if (found)
                             {
