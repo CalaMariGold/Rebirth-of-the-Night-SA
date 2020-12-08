@@ -75,6 +75,14 @@ namespace Rebirth.Player
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """"
+                },
+                {
+                    ""name"": ""Smooth Terrain"",
+                    ""type"": ""Button"",
+                    ""id"": ""4475472b-dc72-4440-9fa0-54a9bfe5572e"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
                 }
             ],
             ""bindings"": [
@@ -198,6 +206,17 @@ namespace Rebirth.Player
                     ""action"": ""Dig Terrain"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""1d6592ae-9c1a-4584-a97f-b41731be06cb"",
+                    ""path"": ""<Mouse>/middleButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Smooth Terrain"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -213,6 +232,7 @@ namespace Rebirth.Player
             m_Default_Jump = m_Default.FindAction("Jump", throwIfNotFound: true);
             m_Default_RaiseTerrain = m_Default.FindAction("Raise Terrain", throwIfNotFound: true);
             m_Default_DigTerrain = m_Default.FindAction("Dig Terrain", throwIfNotFound: true);
+            m_Default_SmoothTerrain = m_Default.FindAction("Smooth Terrain", throwIfNotFound: true);
         }
 
         public void Dispose()
@@ -269,6 +289,7 @@ namespace Rebirth.Player
         private readonly InputAction m_Default_Jump;
         private readonly InputAction m_Default_RaiseTerrain;
         private readonly InputAction m_Default_DigTerrain;
+        private readonly InputAction m_Default_SmoothTerrain;
         public struct DefaultActions
         {
             private @PlayerControls m_Wrapper;
@@ -280,6 +301,7 @@ namespace Rebirth.Player
             public InputAction @Jump => m_Wrapper.m_Default_Jump;
             public InputAction @RaiseTerrain => m_Wrapper.m_Default_RaiseTerrain;
             public InputAction @DigTerrain => m_Wrapper.m_Default_DigTerrain;
+            public InputAction @SmoothTerrain => m_Wrapper.m_Default_SmoothTerrain;
             public InputActionMap Get() { return m_Wrapper.m_Default; }
             public void Enable() { Get().Enable(); }
             public void Disable() { Get().Disable(); }
@@ -310,6 +332,9 @@ namespace Rebirth.Player
                     @DigTerrain.started -= m_Wrapper.m_DefaultActionsCallbackInterface.OnDigTerrain;
                     @DigTerrain.performed -= m_Wrapper.m_DefaultActionsCallbackInterface.OnDigTerrain;
                     @DigTerrain.canceled -= m_Wrapper.m_DefaultActionsCallbackInterface.OnDigTerrain;
+                    @SmoothTerrain.started -= m_Wrapper.m_DefaultActionsCallbackInterface.OnSmoothTerrain;
+                    @SmoothTerrain.performed -= m_Wrapper.m_DefaultActionsCallbackInterface.OnSmoothTerrain;
+                    @SmoothTerrain.canceled -= m_Wrapper.m_DefaultActionsCallbackInterface.OnSmoothTerrain;
                 }
                 m_Wrapper.m_DefaultActionsCallbackInterface = instance;
                 if (instance != null)
@@ -335,6 +360,9 @@ namespace Rebirth.Player
                     @DigTerrain.started += instance.OnDigTerrain;
                     @DigTerrain.performed += instance.OnDigTerrain;
                     @DigTerrain.canceled += instance.OnDigTerrain;
+                    @SmoothTerrain.started += instance.OnSmoothTerrain;
+                    @SmoothTerrain.performed += instance.OnSmoothTerrain;
+                    @SmoothTerrain.canceled += instance.OnSmoothTerrain;
                 }
             }
         }
@@ -348,6 +376,7 @@ namespace Rebirth.Player
             void OnJump(InputAction.CallbackContext context);
             void OnRaiseTerrain(InputAction.CallbackContext context);
             void OnDigTerrain(InputAction.CallbackContext context);
+            void OnSmoothTerrain(InputAction.CallbackContext context);
         }
     }
 }

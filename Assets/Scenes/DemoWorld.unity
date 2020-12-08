@@ -611,6 +611,14 @@ PrefabInstance:
       propertyPath: _chunkManager
       value: 
       objectReference: {fileID: 813522795}
+    - target: {fileID: 3860330111547810042, guid: 204c5564d335b7744b4ca526d6ce5765, type: 3}
+      propertyPath: _lerpAmount
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3860330111547810042, guid: 204c5564d335b7744b4ca526d6ce5765, type: 3}
+      propertyPath: _smoothingDelta
+      value: 0.1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 204c5564d335b7744b4ca526d6ce5765, type: 3}
 --- !u!1 &1937327349

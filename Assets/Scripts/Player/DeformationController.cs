@@ -15,9 +15,16 @@ namespace Rebirth.Player
         [SerializeField] private float _radius = 2;
         [SerializeField] private float _delta = 0.1f;
         [SerializeField] private float _raycastRadius = 0.5f;
+        [SerializeField] private float _lerpAmount = 0.5f;
+        [SerializeField] private float _smoothingRadius = 4;
+        [SerializeField] private float _smoothingDelta = 0.2f;
         
         private bool _isRaising;
         private bool _isDigging;
+        private bool _isSmoothing;
+
+        private Vector3 _target;
+        private Vector3 _normal;
 
         #region Control Events
 
@@ -40,6 +47,16 @@ namespace Rebirth.Player
         {
             _isRaising = true;
         }
+        
+        public void OnSmoothStarted()
+        {
+            _isSmoothing = true;
+        }
+
+        public void OnSmoothCanceled()
+        {
+            _isSmoothing = false;
+        }
 
         #endregion
 
@@ -58,25 +75,27 @@ namespace Rebirth.Player
                 return;
             }
 
-            UpdateHandle(result);
-            DeformTerrain(result);
+            // Lerp target position and rotation
+            _target = Vector3.Lerp(_target, result.point, _lerpAmount);
+            _normal = Vector3.Lerp(_normal, result.normal, _lerpAmount);
+            
+            UpdateHandle();
+            DeformTerrain();
         }
 
         /// <summary>
         /// Update the terrain at the targeted location.
         /// </summary>
-        /// <param name="hitInfo">The raycast result from the camera's viewpoint.</param>
-        private void DeformTerrain(RaycastHit hitInfo)
+        private void DeformTerrain()
         {
             if (_isDigging && _isRaising)
             {
                 return;
             }
 
-            var spherePoints = GenerateSphere(_radius, hitInfo.point);
-            
             if (_isDigging)
             {
+                var spherePoints = GenerateSphere(_radius, _target);
                 // Dig terrain
                 foreach (var point in spherePoints)
                 {
@@ -90,10 +109,31 @@ namespace Rebirth.Player
 
             if (_isRaising)
             {
+                var spherePoints = GenerateSphere(_radius, _target);
+                // Raise terrain
                 foreach (var point in spherePoints)
                 {
                     var voxelInfo = _chunkManager[point.x, point.y, point.z];
                     voxelInfo.Distance = Mathf.Clamp(voxelInfo.Distance - _delta, -1, 1);
+                    _chunkManager[point.x, point.y, point.z] = voxelInfo;
+                }
+
+                return;
+            }
+
+            if (_isSmoothing)
+            {
+                var spherePoints = GenerateSphere(_smoothingRadius, _target);
+                // Smooth terrain
+                foreach (var point in spherePoints)
+                {
+                    var displace = point - _target;
+                    var normalDistance = Vector3.Dot(_normal, displace);
+                    var voxelInfo = _chunkManager[point.x, point.y, point.z];
+                    voxelInfo.Distance = Mathf.Lerp(
+                        voxelInfo.Distance, normalDistance,
+                        _smoothingDelta * Mathf.Exp(-displace.magnitude)
+                    );
                     _chunkManager[point.x, point.y, point.z] = voxelInfo;
                 }
             }
@@ -127,11 +167,10 @@ namespace Rebirth.Player
         /// <summary>
         /// Show the deformation handle at the targeted location.
         /// </summary>
-        /// <param name="result">The raycast result from the camera's viewpoint.</param>
-        private void UpdateHandle(RaycastHit result)
+        private void UpdateHandle()
         {
-            _handle.position = result.point + result.normal * _handleHeight;
-            _handle.up = result.normal;
+            _handle.position = _target + _normal * _handleHeight;
+            _handle.up = _normal;
             _handle.gameObject.SetActive(true);
         }
     }

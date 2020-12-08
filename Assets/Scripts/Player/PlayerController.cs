@@ -27,6 +27,8 @@ namespace Rebirth.Player
             _playerControls.Default.RaiseTerrain.canceled += context => _deformation.OnRaiseCanceled();
             _playerControls.Default.DigTerrain.started += context => _deformation.OnDigStarted();
             _playerControls.Default.DigTerrain.canceled += context => _deformation.OnDigCanceled();
+            _playerControls.Default.SmoothTerrain.started += context => _deformation.OnSmoothStarted();
+            _playerControls.Default.SmoothTerrain.canceled += context => _deformation.OnSmoothCanceled();
         }
 
         private void OnEnable()
