@@ -17,7 +17,7 @@ namespace Rebirth.Player
     ""name"": ""PlayerControls"",
     ""maps"": [
         {
-            ""name"": ""Default"",
+            ""name"": ""Movement"",
             ""id"": ""bd370564-71de-450d-bffe-03e323faccdf"",
             ""actions"": [
                 {
@@ -162,17 +162,47 @@ namespace Rebirth.Player
                     ""isPartOfComposite"": false
                 }
             ]
+        },
+        {
+            ""name"": ""UI"",
+            ""id"": ""e854ae95-49ea-4939-940d-af17e7b5750a"",
+            ""actions"": [
+                {
+                    ""name"": ""Inventory"",
+                    ""type"": ""Button"",
+                    ""id"": ""59ce15db-6b7a-486d-a305-7828e8a2db78"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""aa84f9cd-3da6-4b37-9f82-d2fafc9a2d99"",
+                    ""path"": ""<Keyboard>/e"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Inventory"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
         }
     ],
     ""controlSchemes"": []
 }");
-            // Default
-            m_Default = asset.FindActionMap("Default", throwIfNotFound: true);
-            m_Default_Look = m_Default.FindAction("Look", throwIfNotFound: true);
-            m_Default_Move = m_Default.FindAction("Move", throwIfNotFound: true);
-            m_Default_Crouch = m_Default.FindAction("Crouch", throwIfNotFound: true);
-            m_Default_Sprint = m_Default.FindAction("Sprint", throwIfNotFound: true);
-            m_Default_Jump = m_Default.FindAction("Jump", throwIfNotFound: true);
+            // Movement
+            m_Movement = asset.FindActionMap("Movement", throwIfNotFound: true);
+            m_Movement_Look = m_Movement.FindAction("Look", throwIfNotFound: true);
+            m_Movement_Move = m_Movement.FindAction("Move", throwIfNotFound: true);
+            m_Movement_Crouch = m_Movement.FindAction("Crouch", throwIfNotFound: true);
+            m_Movement_Sprint = m_Movement.FindAction("Sprint", throwIfNotFound: true);
+            m_Movement_Jump = m_Movement.FindAction("Jump", throwIfNotFound: true);
+            // UI
+            m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
+            m_UI_Inventory = m_UI.FindAction("Inventory", throwIfNotFound: true);
         }
 
         public void Dispose()
@@ -219,49 +249,49 @@ namespace Rebirth.Player
             asset.Disable();
         }
 
-        // Default
-        private readonly InputActionMap m_Default;
-        private IDefaultActions m_DefaultActionsCallbackInterface;
-        private readonly InputAction m_Default_Look;
-        private readonly InputAction m_Default_Move;
-        private readonly InputAction m_Default_Crouch;
-        private readonly InputAction m_Default_Sprint;
-        private readonly InputAction m_Default_Jump;
-        public struct DefaultActions
+        // Movement
+        private readonly InputActionMap m_Movement;
+        private IMovementActions m_MovementActionsCallbackInterface;
+        private readonly InputAction m_Movement_Look;
+        private readonly InputAction m_Movement_Move;
+        private readonly InputAction m_Movement_Crouch;
+        private readonly InputAction m_Movement_Sprint;
+        private readonly InputAction m_Movement_Jump;
+        public struct MovementActions
         {
             private @PlayerControls m_Wrapper;
-            public DefaultActions(@PlayerControls wrapper) { m_Wrapper = wrapper; }
-            public InputAction @Look => m_Wrapper.m_Default_Look;
-            public InputAction @Move => m_Wrapper.m_Default_Move;
-            public InputAction @Crouch => m_Wrapper.m_Default_Crouch;
-            public InputAction @Sprint => m_Wrapper.m_Default_Sprint;
-            public InputAction @Jump => m_Wrapper.m_Default_Jump;
-            public InputActionMap Get() { return m_Wrapper.m_Default; }
+            public MovementActions(@PlayerControls wrapper) { m_Wrapper = wrapper; }
+            public InputAction @Look => m_Wrapper.m_Movement_Look;
+            public InputAction @Move => m_Wrapper.m_Movement_Move;
+            public InputAction @Crouch => m_Wrapper.m_Movement_Crouch;
+            public InputAction @Sprint => m_Wrapper.m_Movement_Sprint;
+            public InputAction @Jump => m_Wrapper.m_Movement_Jump;
+            public InputActionMap Get() { return m_Wrapper.m_Movement; }
             public void Enable() { Get().Enable(); }
             public void Disable() { Get().Disable(); }
             public bool enabled => Get().enabled;
-            public static implicit operator InputActionMap(DefaultActions set) { return set.Get(); }
-            public void SetCallbacks(IDefaultActions instance)
+            public static implicit operator InputActionMap(MovementActions set) { return set.Get(); }
+            public void SetCallbacks(IMovementActions instance)
             {
-                if (m_Wrapper.m_DefaultActionsCallbackInterface != null)
+                if (m_Wrapper.m_MovementActionsCallbackInterface != null)
                 {
-                    @Look.started -= m_Wrapper.m_DefaultActionsCallbackInterface.OnLook;
-                    @Look.performed -= m_Wrapper.m_DefaultActionsCallbackInterface.OnLook;
-                    @Look.canceled -= m_Wrapper.m_DefaultActionsCallbackInterface.OnLook;
-                    @Move.started -= m_Wrapper.m_DefaultActionsCallbackInterface.OnMove;
-                    @Move.performed -= m_Wrapper.m_DefaultActionsCallbackInterface.OnMove;
-                    @Move.canceled -= m_Wrapper.m_DefaultActionsCallbackInterface.OnMove;
-                    @Crouch.started -= m_Wrapper.m_DefaultActionsCallbackInterface.OnCrouch;
-                    @Crouch.performed -= m_Wrapper.m_DefaultActionsCallbackInterface.OnCrouch;
-                    @Crouch.canceled -= m_Wrapper.m_DefaultActionsCallbackInterface.OnCrouch;
-                    @Sprint.started -= m_Wrapper.m_DefaultActionsCallbackInterface.OnSprint;
-                    @Sprint.performed -= m_Wrapper.m_DefaultActionsCallbackInterface.OnSprint;
-                    @Sprint.canceled -= m_Wrapper.m_DefaultActionsCallbackInterface.OnSprint;
-                    @Jump.started -= m_Wrapper.m_DefaultActionsCallbackInterface.OnJump;
-                    @Jump.performed -= m_Wrapper.m_DefaultActionsCallbackInterface.OnJump;
-                    @Jump.canceled -= m_Wrapper.m_DefaultActionsCallbackInterface.OnJump;
+                    @Look.started -= m_Wrapper.m_MovementActionsCallbackInterface.OnLook;
+                    @Look.performed -= m_Wrapper.m_MovementActionsCallbackInterface.OnLook;
+                    @Look.canceled -= m_Wrapper.m_MovementActionsCallbackInterface.OnLook;
+                    @Move.started -= m_Wrapper.m_MovementActionsCallbackInterface.OnMove;
+                    @Move.performed -= m_Wrapper.m_MovementActionsCallbackInterface.OnMove;
+                    @Move.canceled -= m_Wrapper.m_MovementActionsCallbackInterface.OnMove;
+                    @Crouch.started -= m_Wrapper.m_MovementActionsCallbackInterface.OnCrouch;
+                    @Crouch.performed -= m_Wrapper.m_MovementActionsCallbackInterface.OnCrouch;
+                    @Crouch.canceled -= m_Wrapper.m_MovementActionsCallbackInterface.OnCrouch;
+                    @Sprint.started -= m_Wrapper.m_MovementActionsCallbackInterface.OnSprint;
+                    @Sprint.performed -= m_Wrapper.m_MovementActionsCallbackInterface.OnSprint;
+                    @Sprint.canceled -= m_Wrapper.m_MovementActionsCallbackInterface.OnSprint;
+                    @Jump.started -= m_Wrapper.m_MovementActionsCallbackInterface.OnJump;
+                    @Jump.performed -= m_Wrapper.m_MovementActionsCallbackInterface.OnJump;
+                    @Jump.canceled -= m_Wrapper.m_MovementActionsCallbackInterface.OnJump;
                 }
-                m_Wrapper.m_DefaultActionsCallbackInterface = instance;
+                m_Wrapper.m_MovementActionsCallbackInterface = instance;
                 if (instance != null)
                 {
                     @Look.started += instance.OnLook;
@@ -282,14 +312,51 @@ namespace Rebirth.Player
                 }
             }
         }
-        public DefaultActions @Default => new DefaultActions(this);
-        public interface IDefaultActions
+        public MovementActions @Movement => new MovementActions(this);
+
+        // UI
+        private readonly InputActionMap m_UI;
+        private IUIActions m_UIActionsCallbackInterface;
+        private readonly InputAction m_UI_Inventory;
+        public struct UIActions
+        {
+            private @PlayerControls m_Wrapper;
+            public UIActions(@PlayerControls wrapper) { m_Wrapper = wrapper; }
+            public InputAction @Inventory => m_Wrapper.m_UI_Inventory;
+            public InputActionMap Get() { return m_Wrapper.m_UI; }
+            public void Enable() { Get().Enable(); }
+            public void Disable() { Get().Disable(); }
+            public bool enabled => Get().enabled;
+            public static implicit operator InputActionMap(UIActions set) { return set.Get(); }
+            public void SetCallbacks(IUIActions instance)
+            {
+                if (m_Wrapper.m_UIActionsCallbackInterface != null)
+                {
+                    @Inventory.started -= m_Wrapper.m_UIActionsCallbackInterface.OnInventory;
+                    @Inventory.performed -= m_Wrapper.m_UIActionsCallbackInterface.OnInventory;
+                    @Inventory.canceled -= m_Wrapper.m_UIActionsCallbackInterface.OnInventory;
+                }
+                m_Wrapper.m_UIActionsCallbackInterface = instance;
+                if (instance != null)
+                {
+                    @Inventory.started += instance.OnInventory;
+                    @Inventory.performed += instance.OnInventory;
+                    @Inventory.canceled += instance.OnInventory;
+                }
+            }
+        }
+        public UIActions @UI => new UIActions(this);
+        public interface IMovementActions
         {
             void OnLook(InputAction.CallbackContext context);
             void OnMove(InputAction.CallbackContext context);
             void OnCrouch(InputAction.CallbackContext context);
             void OnSprint(InputAction.CallbackContext context);
             void OnJump(InputAction.CallbackContext context);
+        }
+        public interface IUIActions
+        {
+            void OnInventory(InputAction.CallbackContext context);
         }
     }
 }
