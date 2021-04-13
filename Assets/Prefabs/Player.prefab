@@ -89,8 +89,8 @@ MonoBehaviour:
   _terminalVelocity: -50
   _maxUpwardVelocity: 150
   _airAcceleration: 10
-  _airFriction: 0.95
-  _groundFriction: 0.75
+  _airFriction: 0.97
+  _groundFriction: 0.8
   _slopeLimit: 45
   _playerHeightAdjust: 0.125
   _groundMagnetDistance: 0.125
