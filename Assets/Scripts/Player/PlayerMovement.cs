@@ -11,30 +11,61 @@ namespace Rebirth.Player
     {
         #region Member Fields
 
-        //Exposed to editor
+        // Exposed to editor
         [Header("Movement Speed")]
+        [Tooltip("Base move speed of player")]
         [SerializeField] private float _baseSpeed = 5f;
+
+        [Tooltip("Move speed multiplier while sprinting")]
         [SerializeField] private float _sprintMultiplier = 1.5f;
+
+        [Tooltip("Move speed multiplier while crouching")]
         [SerializeField] private float _crouchMultiplier = 0.5f;
+
+        [Tooltip("Move speed multiplier while moving backwards")]
         [SerializeField] private float _reverseMultiplier = 0.5f;
+
+        [Tooltip("Minimum speed before player speed is set to zero")]
         [SerializeField] private float _minSpeed = 0.1f;
 
         [Header("Jumping")]
+        [Tooltip("Force applied to player when jumping")]
         [SerializeField] private float _jumpForce = 4.5f;
+        
+        [Tooltip("Min number of seconds between jumps")]
         [SerializeField] private float _jumpCooldown = 0.5f;
 
         [Header("Physics")]
+        [Tooltip("Static downward force on player (not applied when grounded)")]
         [SerializeField] private float _gravity = 9.81f;
+        
+        [Tooltip("Maximum downward velocity of player")]
         [SerializeField] private float _terminalVelocity = -50f;
+        
+        [Tooltip("Maximum upward velocity of player")]
         [SerializeField] private float _maxUpwardVelocity = 150f;
+        
         [Space]
+        [Tooltip("Directional force applied to the player when moving in a direction while not grounded")]
         [SerializeField] private float _airAcceleration = 10f;
+
+        [Tooltip("Air speed scalar applied every FixedUpdate (Slows ungrounded player)")]
         [SerializeField, Range(0f, 1f)] private float _airFriction = 0.95f;
+
+        [Tooltip("Ground speed scalar applied every FixedUpdate (Slows grounded player)")]
         [SerializeField, Range(0f, 1f)] private float _groundFriction = 0.75f;
+
         [Space]
+        [Tooltip("Maximum slope that is considered ground")]
         [SerializeField, Range(0f, 90f)] private float _slopeLimit = 45f;
+
+        [Tooltip("Height above the ground player floats (player is snapped this distance away from the ground while grounded)")]
         [SerializeField] private float _playerHeightAdjust = 0.125f;
+
+        [Tooltip("Extra distance away from _playerHeightAdjust that is considered ground")]
         [SerializeField] private float _groundMagnetDistance = 0.125f;
+
+        [Tooltip("Downward force applied to player when further above valid ground _playerHeightAdjust, but still grounded")]
         [SerializeField] private float _groundedDownforce = 1.5f;
 
         private float _speedMultiplier = 1f;
