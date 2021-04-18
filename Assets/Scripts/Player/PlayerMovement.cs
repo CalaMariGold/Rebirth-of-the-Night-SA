@@ -71,6 +71,7 @@ namespace Rebirth.Player
         private float _speedMultiplier = 1f;
 
         private bool _sprinting;
+        private bool _resumeSprint;
         private bool _crouching;
         private bool _canJump = true;
 
@@ -137,6 +138,9 @@ namespace Rebirth.Player
 
         public void SprintCanceled()
         {
+            // Allow cancel sprint while moving backwards
+            _resumeSprint = false;
+            // Cancel sprint
             if (_sprinting)
             {
                 _sprinting = false;
@@ -174,11 +178,16 @@ namespace Rebirth.Player
             // Reduces travel speed and prevents sprinting when traveling backwards
             if (movement.y <= 0)
             {
-                if (_sprinting){
-                    movement *= _reverseMultiplier/_sprintMultiplier;
-                } else {
-                    movement *= _reverseMultiplier;
+                movement *= _reverseMultiplier;
+                if (_sprinting)
+                {
+                    SprintCanceled();
+                    // Only do this once to allow canceling sprinting while moving backwards
+                    _resumeSprint = true;
                 }
+            } else if (_resumeSprint)
+            {
+                SprintStarted();
             }
 
             if (_isGrounded)
